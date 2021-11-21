@@ -1,8 +1,11 @@
 # international_football_prediction_model
 
-# dont upload data
+## dont upload data
+
 *.csv
+
 *.xlsx
+
 *.rds
 
 /data/*
