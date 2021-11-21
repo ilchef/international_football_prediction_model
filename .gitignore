@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# No data on git
+*.csv
+*.xlsx
+*.rds
+
+/data/*
