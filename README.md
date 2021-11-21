@@ -1,11 +1,11 @@
 # international_football_prediction_model
 
-## dont upload data
+## Data Sources
 
-*.csv
+### International Rankings through Time
+- https://www.kaggle.com/cashncarry/fifaworldranking
 
-*.xlsx
+### International Football Match Results
+- https://www.kaggle.com/martj42/international-football-results-from-1872-to-2017
 
-*.rds
-
-/data/*
+Download these, run set_workspace() function, and place in data/input folder
