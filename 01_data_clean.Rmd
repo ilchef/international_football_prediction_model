@@ -9,22 +9,73 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+libraries + setup
+- ensures workspace and filepaths are setup
+```{r}
+library(data.table)
+library(dtplyr)
+library(stringr)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+source("functions/create_if_missing.R")
+source("functions/set_workspace.R")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+set_workspace()
 ```
 
-## Including Plots
+read raw input data
+```{r}
+input_files <- list.files("data/input") 
 
-You can also embed plots, for example:
+rankings_ts <- input_files %>% 
+        str_subset(pattern="^fifa_ranking-.*\\.csv")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+rankings_ts <- fread(paste0("data/input/",rankings_ts))
+
+matches_ts <- fread("data/input/results.csv")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+filter input datasets (rankings + matches) for matching dates, maximum of 10 years history
+```{r}
+max_date_rankings <- max(rankings_ts$rank_date)
+max_date_matches <- max(matches_ts$date)
+        
+
+filter_date_upper <- max(max_date_matches,max_date_rankings)
+filter_date_lower <- filter_date_upper - 365*10
+
+rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_upper)]
+
+matches_ts <- matches_ts[date %between% c(filter_date_lower,filter_date_upper)]
+```
+
+
+clean country names (sigh), discard anything not present in both datasets
+```{r}
+source("functions/standardise_countries.R")
+matches_ts <- matches_ts%>% standardise_countries("home_team") %>% standardise_countries("away_team")
+rankings_ts <- rankings_ts%>% standardise_countries("country_full")
+
+countries_matches <- matches_ts[,home_team] %>% unique() %>% as.data.table() 
+countries_rankings <- rankings_ts[,country_full] %>% unique() %>% as.data.table() 
+
+matched_countries <- countries_matches %>% 
+        merge(countries_rankings,by=".",all=FALSE) 
+
+rm(list= c("countries_matches","countries_rankings"))
+
+matches_ts <- matches_ts%>% 
+        merge(matched_countries, by.x = "home_team",by.y=".",all=FALSE)%>% 
+        merge(matched_countries, by.x = "away_team",by.y=".",all=FALSE)
+
+rankings_ts <- rankings_ts%>% 
+        merge(matched_countries, by.x = "country_full",by.y=".",all=FALSE)
+
+```
+
+export cleaned input data
+```{r}
+fwrite(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
+fwrite(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
+```
+
+
