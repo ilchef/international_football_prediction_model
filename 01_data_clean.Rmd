@@ -13,7 +13,7 @@ libraries + setup
 - ensures workspace and filepaths are setup
 ```{r}
 library(data.table)
-library(dtplyr)
+library(dplyr)
 library(stringr)
 
 source("functions/create_if_missing.R")
@@ -78,4 +78,10 @@ fwrite(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
 fwrite(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 ```
 
+create match historical features
+```{r}
+source("functions/match_history_features.R")
+matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,5)
+rm(matches_ts)
+```
 
