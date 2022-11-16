@@ -15,10 +15,9 @@ libraries + setup
 library(data.table)
 library(dplyr)
 library(stringr)
+library(sqldf)
 
-source("functions/create_if_missing.R")
-source("functions/set_workspace.R")
-
+lapply(paste0("functions/",list.files("functions")),source) %>% invisible()
 set_workspace()
 ```
 
@@ -51,12 +50,13 @@ matches_ts <- matches_ts[date %between% c(filter_date_lower,filter_date_upper)]
 
 clean country names (sigh), discard anything not present in both datasets
 ```{r}
-source("functions/standardise_countries.R")
 matches_ts <- matches_ts%>% standardise_countries("home_team") %>% standardise_countries("away_team")
 rankings_ts <- rankings_ts%>% standardise_countries("country_full")
 
 countries_matches <- matches_ts[,home_team] %>% unique() %>% as.data.table() 
 countries_rankings <- rankings_ts[,country_full] %>% unique() %>% as.data.table() 
+
+analyse_country_matchrate(countries_matches,countries_rankings)
 
 matched_countries <- countries_matches %>% 
         merge(countries_rankings,by=".",all=FALSE) 
@@ -74,14 +74,20 @@ rankings_ts <- rankings_ts%>%
 
 export cleaned input data
 ```{r}
-fwrite(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
-fwrite(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
+saveRDS(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
+saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 ```
 
 create match historical features
 ```{r}
-source("functions/match_history_features.R")
-matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,5)
+matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,5) %>%
+        match_history_features(matched_countries,9)
 rm(matches_ts)
 ```
 
+merge on rankings
+```{r}
+matches_x_rankings_ts <- merge_rankings_matches(matches_ts_hist_feats,rankings_ts)
+
+rm(rankings_ts,matches_ts_hist_feats)
+```
