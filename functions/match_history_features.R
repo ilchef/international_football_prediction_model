@@ -22,7 +22,7 @@ match_history_features <- function(df,countries_loop,n){
                         # temp variable identifies the the match involves country "i". important.
                         .[home_team == countries_loop[i]%>%as.character() | away_team == countries_loop[i]%>%as.character(),temp:=1]%>%
                         # ranking by date for country i (temp). 1 is earliest 
-                        .[temp==1,temp_rank := frank(date)]%>%
+                        .[temp==1,temp_rank := frank(date,ties.method="first")]%>%
                         
                         # the four spot variables
                         .[temp==1,temp_win := case_when(home_team==countries_loop[i]%>%as.character() & as.numeric(home_score) > as.numeric(away_score) ~ 1,
@@ -81,6 +81,7 @@ match_history_features <- function(df,countries_loop,n){
                         .[,paste0("home2away_delta_ties_last_",n,"_matches"):=get(paste0("home_team_ties_last_",n,"_matches"))-get(paste0("away_team_ties_last_",n,"_matches"))]%>%
                         .[,paste0("home2away_delta_goals_scored_last_",n,"_matches"):=get(paste0("home_team_goals_scored_last_",n,"_matches"))-get(paste0("away_team_goals_scored_last_",n,"_matches"))]%>%
                         .[,paste0("home2away_delta_goals_conceded_last_",n,"_matches"):=get(paste0("home_team_goals_conceded_last_",n,"_matches"))-get(paste0("away_team_goals_conceded_last_",n,"_matches"))]
+                
                 
         }
         
