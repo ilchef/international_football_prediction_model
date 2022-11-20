@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 libraries + setup
 - ensures workspace and filepaths are setup
 ```{r}
+rm(list=ls())
 library(data.table)
 library(dplyr)
 library(stringr)
@@ -40,7 +41,7 @@ max_date_matches <- max(matches_ts$date)
         
 
 filter_date_upper <- max(max_date_matches,max_date_rankings)
-filter_date_lower <- filter_date_upper - 365*10
+filter_date_lower <- filter_date_upper - 365*15
 
 rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_upper)]
 
@@ -90,4 +91,25 @@ merge on rankings
 matches_x_rankings_ts <- merge_rankings_matches(matches_ts_hist_feats,rankings_ts)
 
 rm(rankings_ts,matches_ts_hist_feats)
+
+matches_x_rankings_ts <- matches_x_rankings_ts %>% 
+        setDT() %>%
+        .[,outcome := case_when(home_score == away_score ~ "tie"
+                                ,home_score > away_score ~ "home win"
+                                , TRUE ~ "away win")]
+
 ```
+
+
+```{r}
+output_data <- split_home_away_records(matches_x_rankings_ts,"away",c("neutral","tournament","date")) %>% 
+        rbind(split_home_away_records(matches_x_rankings_ts,"home",c("neutral","tournament","date")))
+
+saveRDS(output_data,paste0("data/output/final_model_data_",format(filter_date_upper,"_%d%b%y"),".rds"))
+write.csv(output_data,paste0("data/output/final_model_data_",format(filter_date_upper,"_%d%b%y"),".csv"))
+
+
+saveRDS(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".rds"))
+write.csv(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".csv"))
+```
+
