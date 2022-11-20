@@ -41,4 +41,3 @@ merge_rankings_matches <- function(matches_df_input,rankings_df_input){
                 setDT() %>%
                 .[,home2away_delta_rankings := home_fifa_points - away_fifa_points]
 }
-

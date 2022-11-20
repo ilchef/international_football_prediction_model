@@ -108,7 +108,6 @@ output_data <- split_home_away_records(matches_x_rankings_ts,"away",c("neutral",
 saveRDS(output_data,paste0("data/output/final_model_data_",format(filter_date_upper,"_%d%b%y"),".rds"))
 write.csv(output_data,paste0("data/output/final_model_data_",format(filter_date_upper,"_%d%b%y"),".csv"))
 
-
 saveRDS(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".rds"))
 write.csv(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".csv"))
 ```
