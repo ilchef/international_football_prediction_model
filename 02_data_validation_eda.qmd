@@ -1,0 +1,30 @@
+---
+title: "02_data_validation_eda"
+format: html
+editor: visual
+---
+
+Step 1: initialise environment
+
+```{r}
+rm(list=ls())
+library(data.table)
+library(dplyr)
+library(ggplot2)
+```
+
+Step 2: Read in Data
+
+```{r}
+
+data <- readRDS("data/output/final_model_data_multiclass__06Oct22.rds")
+
+```
+
+Step 3: Which variables have NAs?
+
+```{r}
+for (i in names(data)){
+        print(paste0("Number of missings in variable ",i,": ",data[is.na(get(i))] %>% nrow() %>% as.numeric()," out of ",nrow(data)))
+}
+```

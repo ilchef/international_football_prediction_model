@@ -1,0 +1,112 @@
+---
+title: "03a_model_build_logreg"
+output: html_document
+date: "2022-11-19"
+---
+
+
+
+
+libraries + setup
+```{r}
+rm(list=ls())
+library(data.table)
+library(dplyr)
+library(nnet)
+library(caret)
+```
+
+read in data
+```{r}
+data <- readRDS("data/output/final_model_data_multiclass__06Oct22.rds")
+
+```
+
+
+```{r}
+set.seed(31)
+
+trainIndex <- createDataPartition(data$outcome,p=0.7,list=FALSE,times=1)
+test <- data[-trainIndex]
+train <- data[trainIndex]
+```
+
+
+```{r}
+m1 <- multinom(outcome ~ 
+               home2away_delta_rankings+neutral+home2away_delta_goals_scored_last_9_matches
+               +home2away_delta_goals_conceded_last_9_matches+home_fifa_rank_change
+               +home2away_delta_ties_last_9_matches + home2away_delta_wins_last_9_matches
+               
+               ,data=train)
+m1 %>% summary()
+```
+
+```{r}
+z <- summary(m1)$coefficients/summary(m1)$standard.errors
+(1-pnorm(abs(z),0,1))*2
+```
+
+note: not all confederation is significant, may need to sumamrise (europe/sam)
+
+```{r}
+head(round(fitted(m1), 2))
+```
+
+```{r}
+train$outcomepredicted <- predict(m1,newdata=train,"class")
+
+tab <- table(train$outcome, train$outcomepredicted)
+tab
+
+round((sum(diag(tab))/sum(tab))*100,2)
+```
+
+```{r}
+test$outcomepredicted <- predict(m1,newdata=test,"class")
+
+tab <- table(test$outcome, test$outcomepredicted)
+tab
+
+round((sum(diag(tab))/sum(tab))*100,2)
+```
+
+
+```{r}
+train_whole <- train %>% na.omit()
+```
+
+
+
+```{r}
+train_ctrl <- trainControl(method="cv", # type of resampling in this case Cross-Validated
+                           number=3, # number of folds
+                           search = "random", # we are performing a "random
+                           )
+
+toc <- Sys.time()
+model_rf <- train(outcome ~ .,
+                       data = train_whole,
+                       method = "rf", # this will use the randomForest::randomForest function
+                       metric = "Accuracy", # which metric should be optimized for 
+                       trControl = train_ctrl,
+                       # options to be passed to randomForest
+                       ntree = 100,
+                       keep.forest=TRUE,
+                       importance=TRUE) 
+tic <- Sys.time()
+
+tic - toc
+```
+
+```{r}
+test_whole <- test %>% na.omit()
+
+test_whole$outcomepredicted <- predict(model_rf,newdata=test_whole,"pro")
+
+tab <- table(test_whole$outcome, test_whole$outcomepredicted)
+tab
+
+round((sum(diag(tab))/sum(tab))*100,2)
+```
+
