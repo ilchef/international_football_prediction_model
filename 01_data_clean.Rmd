@@ -79,6 +79,12 @@ saveRDS(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
 saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 ```
 
+need a latest point in time snapshot, for app
+```{r}
+
+```
+
+
 create match historical features
 ```{r}
 matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,5) %>%
