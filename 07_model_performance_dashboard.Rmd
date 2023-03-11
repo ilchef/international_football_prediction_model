@@ -1,0 +1,37 @@
+---
+title: "Model Performance Dashboard"
+output: 
+        html_document:
+                css: "css/markdown_template.css"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r,message=FALSE,warning=FALSE,include=FALSE}
+#setup
+rm(list=ls())
+library(data.table)
+library(ggplot2)
+library(dplyr)
+library(stringr)
+model_name <- "22Dec22"
+mod <- readRDS(paste0("models/logreg_",model_name,".rds"))
+today <- format(as.Date(Sys.time()),"%d%b%y")
+```
+
+
+```{r,results="asis",echo=FALSE}
+cat("### Version Control:\n\n")
+cat(paste0("Model trained + validated on data up to: ",model_name,"\n\n\n"))
+
+cat(paste0("Report run on: ",today,"\n\n"))
+```
+
+```{r,echo=FALSE}
+roc_data <- data.table(mod$away_roc)
+
+```
+

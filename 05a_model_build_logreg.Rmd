@@ -14,6 +14,7 @@ library(data.table)
 library(dplyr)
 library(nnet)
 library(caret)
+library(pROC)
 library(lubridate)
 ```
 
@@ -69,7 +70,6 @@ train$outcomepredicted <- predict(m1,newdata=train,"class")
 tab_train <- table(train$outcome, train$outcomepredicted)
 tab_train
 
-round((sum(diag(tab))/sum(tab))*100,2)
 ```
 
 accuracy on testing data:
@@ -79,25 +79,43 @@ test$outcomepredicted <- predict(m1,newdata=test,"class")
 tab_test <- table(test$outcome, test$outcomepredicted)
 tab_test
 
-round((sum(diag(tab))/sum(tab))*100,2)
 ```
 
 discrimination
 ```{r}
+test_clean <- test %>%
+       na.omit()
+
 # first we need to predict probabilities
+probabilities_test <-predict(m1,newdata=test_clean,type="probs") %>% as.data.table()
 
-probabilities_test <-predict(m1,newdata=test,type="probs") %>% as.data.table()
+# loop through outcomes to produce multiclass AUROC data
+for(i in unique(test_clean$outcome)){
+        outcome_temp <- test_clean[,.(outcome)] %>%
+                .[,probs_temp := case_when(outcome==paste0(i)~1,TRUE~0)] %>%
+                .[,.(probs_temp)] %>%
+                as.vector()%>%
+                unlist()
 
-#test <- cbind(test,probabilities_test)
+        probs_temp <- probabilities_test[,.(probs_temp =get(i))] %>% 
+                as.vector() %>%
+                unlist()
+        assign(paste0(i,"_roc_data"),roc(outcome_temp,probs_temp,plot=FALSE))
+        
+        rm(outcome_temp,probs_temp)
+}
 
-#define rest vs. one then ROC
 ```
-
 
 
 ## export model object
 ```{r}
-list(n1m,tab_train,tab_test)
-saveRDS(paste0("models/logred_",input_date,".rds"))
+away_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
+home_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
+tie_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
+
+list(model =m1,conf_train = tab_train,conf_test = tab_test,away_roc = away_roc,home_roc=home_roc,tie_roc=tie_roc)%>%
+saveRDS(paste0("models/logreg_",input_date,".rds"))
 ```
+
 
