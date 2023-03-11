@@ -1,8 +1,11 @@
 # International Football Prediction Model
 
-A web application of the model can be viewed here.
+The deployed model can be viewed in a web application here.
 
 ## Contents:
+- data
+- functions
+- models
 - 01_data_clean.Rmd
 - 02_validation_and_dq.Rmd
 - 03_[various Rmarkdown and JupyterNotebooks]
