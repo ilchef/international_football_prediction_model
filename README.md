@@ -24,7 +24,9 @@ The deployed model can be viewed in a web application here.
 
 ### Data preparation:
 - a trailing 15 year window of data is used
+
 Too many rows in data increases the training time of complexd models - while not necessarily adding any predictive power.
 More recent datapoints more accurately generalize to the current status of commercial, professional football
 - countries that no longer exist are discarded
+
 This includes when countries 'merge' or 'demerge' (i.e. Yugoslavia). This isnt as much of a problem taking recent 15 years of data (compared to taking 20th Century observations)
