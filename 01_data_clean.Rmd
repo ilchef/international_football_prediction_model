@@ -79,11 +79,6 @@ saveRDS(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
 saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 ```
 
-need a latest point in time snapshot, for app
-```{r}
-
-```
-
 
 create match historical features
 ```{r}
