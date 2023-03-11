@@ -30,3 +30,5 @@ More recent datapoints more accurately generalize to the current status of comme
 - countries that no longer exist are discarded
 
 This includes when countries 'merge' or 'demerge' (i.e. Yugoslavia). This isnt as much of a problem taking recent 15 years of data, as opposed to taking 20th Century observations.
+
+## Performance:
