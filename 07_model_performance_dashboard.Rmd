@@ -20,9 +20,23 @@ library(stringr)
 model_name <- "22Dec22"
 mod <- readRDS(paste0("models/logreg_",model_name,".rds"))
 today <- format(as.Date(Sys.time()),"%d%b%y")
+
+ti_aes <- function(){
+        theme(
+                panel.background = element_blank()
+                ,panel.grid.major = element_blank()
+                ,panel.grid.minor = element_blank()
+                , panel.border = element_rect(colour="black",fill=NA)
+                ,axis.text = element_text(colour="black")
+        )
+}
 ```
 
+## test
 
+### test
+
+# Version Control
 ```{r,results="asis",echo=FALSE}
 cat("### Version Control:\n\n")
 cat(paste0("Model trained + validated on data up to: ",model_name,"\n\n\n"))
@@ -31,7 +45,60 @@ cat(paste0("Report run on: ",today,"\n\n"))
 ```
 
 ```{r,echo=FALSE}
-roc_data <- data.table(mod$away_roc)
 
+roc_plot <- function(roc_data){
+        auc <- sprintf("AUC: %s%%",roc_data[[1]]%>%
+                str_replace_all("a-zA-Z","") %>% 
+                as.numeric() %>%
+                round(digits=2)*100) 
+        
+        temp <- data.table(sens=roc_data$sensitivities,spec=1-roc_data$specificities)%>%
+                ggplot()+
+                geom_line(aes(x=spec,y=sens),color="#588B8B")+
+                ti_aes()+
+                scale_y_continuous(labels = scales::percent)+
+                scale_x_continuous(labels = scales::percent) +
+                geom_label(data=NULL,aes(x=0.44,y=0.55,label=auc),color="#588B8B")+
+                xlab("1 - Specificity")+
+                ylab("Sensitivity")+
+                geom_line(data=data.table(x=c(0,1),y=c(0,1)),aes(x=x,y=y),color="#C8553D",linetype=2)
+        temp
+}
+
+classification_table <- function(roc_table,model){
+        temp <- roc_table %>%
+                data.table()%>%
+                .[,V1 := case_when(V1==paste0(model)~paste0(model),TRUE~paste0("Not ",model))]%>%
+                .[,V2 := case_when(V2==paste0(model)~paste0(model),TRUE~paste0("Not ",model))] %>%
+                .[,.(N=sum(N)),by=.(V1,V2)] %>%
+                .[,outcome := V1]%>%
+                .[,prediction:= V2] %>%
+                .[,`:=`(V1=NULL,V2=NULL)]
+        
+        temp
+}
+
+t<- classification_table(mod$conf_test,"away win") 
+print(t)
+```
+
+# Sub-model Performance  {.tabset .tabset-pills}
+
+## Home-win
+
+```{r,echo=FALSE}
+roc_plot(mod$home_roc)
+```
+
+## Home-lose
+
+```{r,echo=FALSE}
+roc_plot(mod$away_roc)
+```
+
+## Tie
+
+```{r,echo=FALSE}
+roc_plot(mod$tie_roc)
 ```
 

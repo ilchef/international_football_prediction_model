@@ -110,9 +110,22 @@ for(i in unique(test_clean$outcome)){
 
 ## export model object
 ```{r}
-away_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
-home_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
-tie_roc <- list(auc=`away win_roc_data`$auc,sensitivities=`away win_roc_data`$sensitivities,specificities=`away win_roc_data`$specificities)
+compress_roc_ <-  c(seq(1,length(`away win_roc_data`$sensitivities),100),length(`away win_roc_data`$sensitivities))
+
+away_roc <- list(auc=`away win_roc_data`$auc
+                 ,sensitivities=`away win_roc_data`$sensitivities[compress_roc_]
+                 ,specificities=`away win_roc_data`$specificities[compress_roc_]
+                 )
+
+home_roc <- list(auc=`home win_roc_data`$auc
+                 ,sensitivities=`home win_roc_data`$sensitivities[compress_roc_]
+                 ,specificities=`home win_roc_data`$specificities[compress_roc_]
+                 )
+
+tie_roc <- list(auc=`tie_roc_data`$auc
+                ,sensitivities=`tie_roc_data`$sensitivities[compress_roc_]
+                ,specificities=`tie_roc_data`$specificities[compress_roc_]
+                )
 
 list(model =m1,conf_train = tab_train,conf_test = tab_test,away_roc = away_roc,home_roc=home_roc,tie_roc=tie_roc)%>%
 saveRDS(paste0("models/logreg_",input_date,".rds"))
