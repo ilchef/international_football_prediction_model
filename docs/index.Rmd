@@ -13,10 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r,message=FALSE,warning=FALSE,include=FALSE}
 #setup
 rm(list=ls())
+
 library(data.table)
 library(ggplot2)
 library(dplyr)
 library(stringr)
+
+setwd("/Users/tilchef/Desktop/code/football_prediction/international_football_prediction_model")
+
 model_name <- "22Dec22"
 mod <- readRDS(paste0("models/logreg_",model_name,".rds"))
 today <- format(as.Date(Sys.time()),"%d%b%y")
