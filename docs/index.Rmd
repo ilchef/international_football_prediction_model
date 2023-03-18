@@ -18,6 +18,9 @@ library(data.table)
 library(ggplot2)
 library(dplyr)
 library(stringr)
+library(flextable)
+library(officer)
+library(cowplot)
 
 setwd("/Users/tilchef/Desktop/code/football_prediction/international_football_prediction_model")
 
@@ -30,79 +33,112 @@ ti_aes <- function(){
                 panel.background = element_blank()
                 ,panel.grid.major = element_blank()
                 ,panel.grid.minor = element_blank()
-                , panel.border = element_rect(colour="black",fill=NA)
+                ,panel.border = element_rect(colour="black",fill=NA)
                 ,axis.text = element_text(colour="black")
+                ,strip.background = element_rect(color="#277150",fill="#277150")
+                ,strip.text = element_text(color="#C8F0D8",size = 14,face="bold")
+                ,axis.line = element_line(color="black")
+                ,axis.ticks = element_line(color="black")
+                ,axis.title = element_text(color="#277150",size=12)
         )
 }
 ```
 
-## test
 
-### test
 
 # Version Control
+
 ```{r,results="asis",echo=FALSE}
-cat("### Version Control:\n\n")
 cat(paste0("Model trained + validated on data up to: ",model_name,"\n\n\n"))
 
 cat(paste0("Report run on: ",today,"\n\n"))
 ```
 
 ```{r,echo=FALSE}
-
-roc_plot <- function(roc_data){
+roc_plot <- function(roc_data,model){
         auc <- sprintf("AUC: %s%%",roc_data[[1]]%>%
                 str_replace_all("a-zA-Z","") %>% 
                 as.numeric() %>%
                 round(digits=2)*100) 
         
         temp <- data.table(sens=roc_data$sensitivities,spec=1-roc_data$specificities)%>%
+                .[,title:=paste0(model)]%>%
                 ggplot()+
-                geom_line(aes(x=spec,y=sens),color="#588B8B")+
+                geom_line(aes(x=spec,y=sens),color="#277150")+
                 ti_aes()+
                 scale_y_continuous(labels = scales::percent)+
                 scale_x_continuous(labels = scales::percent) +
-                geom_label(data=NULL,aes(x=0.44,y=0.55,label=auc),color="#588B8B")+
+                geom_label(data=NULL,aes(x=0.44,y=0.55,label=auc),color="#277150")+
                 xlab("1 - Specificity")+
                 ylab("Sensitivity")+
-                geom_line(data=data.table(x=c(0,1),y=c(0,1)),aes(x=x,y=y),color="#C8553D",linetype=2)
+                geom_line(data=data.table(x=c(0,1),y=c(0,1)),aes(x=x,y=y),color="#4C4C4C",linetype=2)+
+                facet_wrap(~title)
         temp
 }
 
 classification_table <- function(roc_table,model){
         temp <- roc_table %>%
                 data.table()%>%
-                .[,V1 := case_when(V1==paste0(model)~paste0(model),TRUE~paste0("Not ",model))]%>%
-                .[,V2 := case_when(V2==paste0(model)~paste0(model),TRUE~paste0("Not ",model))] %>%
+                .[,V1 := case_when(V1==paste0(model)~paste0(model),TRUE~paste0("not ",model))]%>%
+                .[,V2 := case_when(V2==paste0(model)~paste0(model),TRUE~paste0("not ",model))] %>%
                 .[,.(N=sum(N)),by=.(V1,V2)] %>%
                 .[,outcome := V1]%>%
                 .[,prediction:= V2] %>%
-                .[,`:=`(V1=NULL,V2=NULL)]
+                .[,`:=`(V1=NULL,V2=NULL)]%>%
+                dcast(prediction~outcome,value.var="N") %>%
+                flextable() %>%
+                set_header_labels(values=c("",paste0("not ",model),paste0(model))) %>%
+                border_remove() %>%
+                vline(part="all",j=2,border=fp_border(color="#277150"))%>%
+                vline_right(part="all",border=fp_border(color="#277150"))%>%
+                hline(part="all",i=1,border=fp_border(color="#277150"))%>%
+                hline_bottom(part="all",border=fp_border(color="#277150"))%>%
+                bg(part="body",j=1,bg="#277150")%>%
+                bg(part="header",j=2:3,bg="#277150") %>%
+                bg(part="body",j=2:3,bg="#C8F0D8") %>%
+                color(part="body",j=1,color="#C8F0D8")%>%
+                color(part="header",j=2:3,color="#C8F0D8")%>%
+                color(part="body",j=2:3,color="#277150") %>%
+                align(part="all",align="center")
         
         temp
 }
 
-t<- classification_table(mod$conf_test,"away win") 
-print(t)
 ```
 
 # Sub-model Performance  {.tabset .tabset-pills}
 
 ## Home-win
 
-```{r,echo=FALSE}
-roc_plot(mod$home_roc)
+```{r,echo=FALSE,fig.width=10}
+roc <- roc_plot(mod$home_roc,"Home Team Wins")
+
+test <- classification_table(mod$conf_test,"home win") %>%gen_grob() 
+test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
+
+plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
 ```
 
-## Home-lose
+## Away-win
 
-```{r,echo=FALSE}
-roc_plot(mod$away_roc)
+```{r,echo=FALSE,fig.width=10}
+roc <- roc_plot(mod$away_roc,"Away Team Wins")
+
+test <- classification_table(mod$conf_test,"away win") %>%gen_grob() 
+test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
+
+plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
 ```
 
 ## Tie
 
-```{r,echo=FALSE}
-roc_plot(mod$tie_roc)
+```{r,echo=FALSE,fig.width=10}
+roc <- roc_plot(mod$tie_roc,"Tie")
+
+
+test <- classification_table(mod$conf_test,"tie") %>%gen_grob() 
+test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
+
+plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
 ```
 
