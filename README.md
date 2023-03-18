@@ -32,3 +32,5 @@ More recent datapoints more accurately generalize to the current status of comme
 This includes when countries 'merge' or 'demerge' (i.e. Yugoslavia). This isnt as much of a problem taking recent 15 years of data, as opposed to taking 20th Century observations.
 
 ## Performance:
+
+Model performance dashboard can be viewed [here](https://ilchef.github.io/international_football_prediction_model/).
