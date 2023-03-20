@@ -19,6 +19,8 @@ library(ggplot2)
 library(dplyr)
 library(stringr)
 library(flextable)
+library(caret)
+library(forcats)
 library(officer)
 library(cowplot)
 
@@ -105,6 +107,39 @@ classification_table <- function(roc_table,model){
 }
 
 ```
+
+# About the model:
+
+## Summary
+
+The model is a multinomial log-linear model trained to classify probabilities of three outcomes: home-team win, away-team-win or tie.
+
+
+
+## Feature Importance
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+mod$model %>% 
+        varImp() %>% 
+        tibble::rownames_to_column() %>%
+        mutate(Overall = Overall/sum(Overall))%>%
+        mutate(label = paste0(round(Overall*100,2),"%"))%>%
+        mutate(rowname:= fct_reorder(rowname,Overall))%>%
+        ggplot()+
+        geom_bar(stat="identity",aes(x=rowname,y=Overall),fill="#C8F0D8")+
+        geom_text(aes(x=rowname,y=Overall+0.1,label = label),colour = "#277150")+
+        scale_y_continuous(labels = scales::percent)+
+        ti_aes()+
+        theme(axis.text.x = element_text(angle=90))+
+        coord_flip()+
+        scale_y_continuous(labels = scales::percent,limits=c(0,1))+
+        xlab("")+
+        ylab("Relative Contribution")
+```
+
+Almost 50% of prediction is driven by a single outcome (whether match was played on neutral grounds).
+
+This is intuitive, however too much contribution for a single variable. Will be investigated.
 
 # Sub-model Performance  {.tabset .tabset-pills}
 

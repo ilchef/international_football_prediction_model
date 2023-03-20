@@ -82,8 +82,9 @@ saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 
 create match historical features
 ```{r}
-matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,5) %>%
-        match_history_features(matched_countries,9)
+matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,3) %>%
+        match_history_features(matched_countries,9)%>%
+        match_history_features(matched_countries,3)
 rm(matches_ts)
 ```
 
