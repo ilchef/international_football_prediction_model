@@ -48,7 +48,7 @@ ti_aes <- function(){
 
 
 
-# Version Control
+## Version Control
 
 ```{r,results="asis",echo=FALSE}
 cat(paste0("Model trained + validated on data up to: ",model_name,"\n\n\n"))
@@ -108,15 +108,15 @@ classification_table <- function(roc_table,model){
 
 ```
 
-# About the model:
+## About the model:
 
-## Summary
+### Summary
 
 The model is a multinomial log-linear model trained to classify probabilities of three outcomes: home-team win, away-team-win or tie.
 
 
 
-## Feature Importance
+### Feature Importance
 
 ```{r,echo=FALSE,warning=FALSE,message=FALSE}
 mod$model %>% 
@@ -141,9 +141,9 @@ Almost 50% of prediction is driven by a single outcome (whether match was played
 
 This is intuitive, however too much contribution for a single variable. Will be investigated.
 
-# Sub-model Performance  {.tabset .tabset-pills}
+## Sub-model Performance  {.tabset .tabset-pills}
 
-## Home-win
+### Home-win
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$home_roc,"Home Team Wins")
@@ -154,7 +154,7 @@ test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
 plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
 ```
 
-## Away-win
+### Away-win
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$away_roc,"Away Team Wins")
@@ -165,7 +165,7 @@ test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
 plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
 ```
 
-## Tie
+### Tie
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$tie_roc,"Tie")
