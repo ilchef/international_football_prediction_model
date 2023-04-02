@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list=ls())
 
 library(dplyr)
+library(sqldf)
 library(data.table)
 ```
 
@@ -32,7 +33,7 @@ Create
 rankings_features <- merge_rankings_matches(matches_ts,rankings_ts) 
 rm(rankings_ts)
 
-pit_features <- create_pit_features(matches_ts,rankings_features,n=9)
+pit_features <- create_pit_features(matches_ts,rankings_features,n=c(9,3))
 ```
 
 save data
