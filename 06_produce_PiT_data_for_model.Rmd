@@ -39,6 +39,7 @@ pit_features <- create_pit_features(matches_ts,rankings_features,n=c(9,3))
 save data
 ```{r}
 saveRDS(pit_features,"data/input_cleaned_pit_predictions.rds")
+fwrite(pit_features,"data/input_cleaned_pit_predictions.csv")
 ```
 
 
