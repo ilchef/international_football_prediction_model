@@ -88,6 +88,9 @@ classification_table <- function(roc_table,model){
                 .[,prediction:= V2] %>%
                 .[,`:=`(V1=NULL,V2=NULL)]%>%
                 dcast(prediction~outcome,value.var="N") %>%
+                .[,dummy_order := case_when(str_detect(prediction,"not ")~1,TRUE~2)]%>%
+                .[order(dummy_order)]%>%
+                .[,dummy_order := NULL]%>%
                 flextable() %>%
                 set_header_labels(values=c("",paste0("not ",model),paste0(model))) %>%
                 border_remove() %>%
@@ -139,7 +142,38 @@ mod$model %>%
 
 Almost 50% of prediction is driven by a single outcome (whether match was played on neutral grounds).
 
-This is intuitive, however too much contribution for a single variable. Will be investigated.
+This relationship is intuitive, however too much contribution for a single variable. Will be investigated.
+
+### Calibration & Sensitivity
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+data <- data.table(fitted = mod$model$fitted.values) %>% 
+        melt(measure.vars=c("fitted.away win","fitted.tie","fitted.home win"))%>%
+        .[,Outcome := case_when(variable=="fitted.away win" ~ "Away Team Wins",variable == "fitted.tie" ~ "Tie",TRUE ~ "Home Team Wins")]
+        
+data%>%
+        ggplot()+
+        geom_histogram(aes(x=value,fill=Outcome))+
+        geom_text(data=data %>%.[,.(value= mean(value)),by=Outcome],aes(x=value,y=750,label=sprintf("Mean:\n%.2f%%",value*100)),color="#277150")+
+        geom_text(data=data %>%.[Outcome=="Tie"]%>%.[,.(value= max(value)),by=Outcome],aes(x=value,y=750,label=sprintf("Max:\n%.2f%%",value*100)),color="#E15634")+
+        theme(legend.position="none")+
+        scale_fill_manual(values=c("#C8F0D8","#C8F0D8","#C8F0D8"))+
+        scale_x_continuous(labels = scales::percent)+
+        ti_aes()+
+        facet_wrap(~Outcome,ncol=1) +
+        ylab("")+
+        xlab("Predicted Outcome")
+
+```
+
+As per actuals, the predicted values average to outcomes roughly in the order of 50%-25%-25% for Home, Away and Tie respectively.
+
+In terms of sensitivity, both Home and Away classification models can produce outcomes with extremely high (>99%) or low (<1%) probabilities. The Tie classification model struggles to produce many high probabilities - implying that a tie is rarely the most likely outcome. 
+This is also observed in exploratory data analysis, where very few variables are found to be strongly correlated with tie outcomes - and model performance, where false negative rate is high.
+
+### Residuals
+
+Under
 
 ## Sub-model Performance  {.tabset .tabset-pills}
 
