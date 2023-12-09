@@ -34,7 +34,7 @@ rankings_ts <- fread(paste0("data/input/",rankings_ts))
 matches_ts <- fread("data/input/results.csv")
 ```
 
-filter input datasets (rankings + matches) for matching dates, maximum of 10 years history
+filter input datasets (rankings + matches) for matching dates, maximum of 15 years history
 ```{r}
 max_date_rankings <- max(rankings_ts$rank_date)
 max_date_matches <- max(matches_ts$date)
@@ -84,7 +84,7 @@ create match historical features
 ```{r}
 matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,3) %>%
         match_history_features(matched_countries,9)%>%
-        match_history_features(matched_countries,3)
+        match_history_features(matched_countries,5)
 rm(matches_ts)
 ```
 
