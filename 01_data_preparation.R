@@ -1,17 +1,4 @@
----
-title: "Data Clean"
-author: "Tom Ilchef"
-date: "21/11/2021"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-libraries + setup
-- ensures workspace and filepaths are setup
-```{r}
+# 0.0 Setup
 rm(list=ls())
 library(data.table)
 library(dplyr)
@@ -20,10 +7,8 @@ library(sqldf)
 
 lapply(paste0("functions/",list.files("functions")),source) %>% invisible()
 set_workspace()
-```
 
-read raw input data
-```{r}
+# 1.0 Read Data
 input_files <- list.files("data/input") 
 
 rankings_ts <- input_files %>% 
@@ -32,13 +17,12 @@ rankings_ts <- input_files %>%
 rankings_ts <- fread(paste0("data/input/",rankings_ts))
 
 matches_ts <- fread("data/input/results.csv")
-```
 
-filter input datasets (rankings + matches) for matching dates, maximum of 15 years history
-```{r}
+# 2.1 Clean data - date matches
+
 max_date_rankings <- max(rankings_ts$rank_date)
 max_date_matches <- max(matches_ts$date)
-        
+
 
 filter_date_upper <- max(max_date_matches,max_date_rankings)
 filter_date_lower <- filter_date_upper - 365*15
@@ -46,11 +30,9 @@ filter_date_lower <- filter_date_upper - 365*15
 rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_upper)]
 
 matches_ts <- matches_ts[date %between% c(filter_date_lower,filter_date_upper)]
-```
 
+# 2.2 Clean data - country names
 
-clean country names (sigh), discard anything not present in both datasets
-```{r}
 matches_ts <- matches_ts%>% standardise_countries("home_team") %>% standardise_countries("away_team")
 rankings_ts <- rankings_ts%>% standardise_countries("country_full")
 
@@ -71,25 +53,22 @@ matches_ts <- matches_ts%>%
 rankings_ts <- rankings_ts%>% 
         merge(matched_countries, by.x = "country_full",by.y=".",all=FALSE)
 
-```
 
-export cleaned input data
-```{r}
+# 2.3 Clean data - interim save
+
 saveRDS(matches_ts,"data/input_cleaned/matches_cleaned_ts.rds")
 saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
-```
 
+# 3.0 Feature Engineering
 
-create match historical features
-```{r}
 matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,3) %>%
         match_history_features(matched_countries,9)%>%
         match_history_features(matched_countries,5)
 rm(matches_ts)
-```
 
-merge on rankings
-```{r}
+# 3.1 Feature Enineering - rankings
+
+
 matches_x_rankings_ts <- merge_rankings_matches(matches_ts_hist_feats,rankings_ts)
 
 rm(rankings_ts,matches_ts_hist_feats)
@@ -100,10 +79,9 @@ matches_x_rankings_ts <- matches_x_rankings_ts %>%
                                 ,home_score > away_score ~ "home win"
                                 , TRUE ~ "away win")]
 
-```
+# 4.0 Save data
 
 
-```{r}
 output_data <- split_home_away_records(matches_x_rankings_ts,"away",c("neutral","tournament","date")) %>% 
         rbind(split_home_away_records(matches_x_rankings_ts,"home",c("neutral","tournament","date")))
 
@@ -112,5 +90,3 @@ write.csv(output_data,paste0("data/output/final_model_data_",format(filter_date_
 
 saveRDS(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".rds"))
 write.csv(matches_x_rankings_ts,paste0("data/output/final_model_data_multiclass_",format(filter_date_upper,"_%d%b%y"),".csv"))
-```
-
