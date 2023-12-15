@@ -1,0 +1,45 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-03-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+rm(list=ls())
+
+library(dplyr)
+library(sqldf)
+library(data.table)
+```
+
+read in base data
+```{r}
+matches_ts <-readRDS("data/input_cleaned/matches_cleaned_ts.rds")%>%setDT()
+rankings_ts <-readRDS("data/input_cleaned/rankings_cleaned_ts.rds")%>%setDT()
+
+source("functions/merge_rankings_matches.R")
+source("functions/create_pit_features.R")
+```
+
+Create
+-last 9 matches features
+- ranking features
+```{r}
+rankings_features <- merge_rankings_matches(matches_ts,rankings_ts) 
+rm(rankings_ts)
+
+pit_features <- create_pit_features(matches_ts,rankings_features,n=c(9,3))
+```
+
+save data
+```{r}
+saveRDS(pit_features,"data/input_cleaned_pit_predictions.rds")
+fwrite(pit_features,"data/input_cleaned_pit_predictions.csv")
+```
+
+
