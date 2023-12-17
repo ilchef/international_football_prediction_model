@@ -9,6 +9,12 @@ standardise_countries <- function(dt,varname){
                          ,str_detect(get(varname),"ivoire")~"ivory coast"
                          ,get(varname) == "korea dpr"~"north korea"
                          ,get(varname) == "korea republic"~"south korea"
+                         ,str_detect(get(varname),"hong kong") ~ "hong kong"
+                         ,str_detect(get(varname),"czech") ~ "czechia"
+                         ,str_detect(get(varname),"gambia") ~ "gambia"
+                         ,str_detect(get(varname),"new zealand") ~ "new zealand"
+                         ,str_detect(get(varname),"macedonia") ~ "north macedonia"
+                         ,str_detect(get(varname),"turkey|türkiye") ~ "turkiye"
                          
                          ,str_detect(get(varname),"vincent")~"saint vincent"
                          ,str_detect(get(varname),"st\\.")~str_replace_all(get(varname),"st\\.","saint")

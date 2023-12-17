@@ -31,6 +31,16 @@ rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_u
 
 matches_ts <- matches_ts[date %between% c(filter_date_lower,filter_date_upper)]
 
+# 2.1b If ranking data not as current as match data, use latest available rankings
+
+if(max(rankings_ts$rank_date < filter_date_upper)){
+        latest_rankings_temp <- rankings_ts[rank_date == max(rank_date)] %>%
+                .[,rank_date := filter_date_upper]
+        
+        rankings_ts <- rbind(rankings_ts,latest_rankings_temp)
+        rm(latest_rankings_temp)
+}
+
 # 2.2 Clean data - country names
 
 matches_ts <- matches_ts%>% standardise_countries("home_team") %>% standardise_countries("away_team")
@@ -62,13 +72,10 @@ saveRDS(rankings_ts,"data/input_cleaned/rankings_cleaned_ts.rds")
 # 3.0 Feature Engineering
 
 matches_ts_hist_feats <- match_history_features(matches_ts,matched_countries,3) %>%
-        match_history_features(matched_countries,9)%>%
-        match_history_features(matched_countries,5)
+        match_history_features(matched_countries,9)
 rm(matches_ts)
 
 # 3.1 Feature Enineering - rankings
-
-
 matches_x_rankings_ts <- merge_rankings_matches(matches_ts_hist_feats,rankings_ts)
 
 rm(rankings_ts,matches_ts_hist_feats)
@@ -79,9 +86,8 @@ matches_x_rankings_ts <- matches_x_rankings_ts %>%
                                 ,home_score > away_score ~ "home win"
                                 , TRUE ~ "away win")]
 
+
 # 4.0 Save data
-
-
 output_data <- split_home_away_records(matches_x_rankings_ts,"away",c("neutral","tournament","date")) %>% 
         rbind(split_home_away_records(matches_x_rankings_ts,"home",c("neutral","tournament","date")))
 
