@@ -1,15 +1,24 @@
 # International Football Prediction Model
 
-The deployed model can be viewed in a web application here.
+The deployed model can be viewed in a web application here (UNDER CONSTRUCTION).
 
 ## Repository Contents:
-- data
+
+Folders:
+- data (not tracked)
 - functions
-- models
-- 01_data_clean.Rmd
-- 02_validation_and_dq.Rmd
-- 03_[various Rmarkdown and JupyterNotebooks]
-- 04_produce_PiT_data_for_model.Rmd
+- models (not tracked)
+- docs
+
+
+Scripts/Notebooks:
+- 01: data pipelines
+- 02: data validation/quality checks + univariate/bivariate testing
+- 03: model builds
+- 04: PiT data pipelines
+- 05: model deployment
+
+
 
 ## Data Sources:
 
