@@ -168,12 +168,39 @@ data%>%
 
 As per actuals, the predicted values average to outcomes roughly in the order of 50%-25%-25% for Home, Away and Tie respectively.
 
-In terms of sensitivity, both Home and Away classification models can produce outcomes with extremely high (>99%) or low (<1%) probabilities. The Tie classification model struggles to produce many high probabilities - implying that a tie is rarely the most likely outcome. 
+In terms of discrimination, both Home and Away classification models can produce outcomes with extremely high (>99%) or low (<1%) probabilities. The Tie classification model struggles to produce many high probabilities - implying that a tie is rarely the most likely outcome. 
 This is also observed in exploratory data analysis, where very few variables are found to be strongly correlated with tie outcomes - and model performance, where false negative rate is high.
 
 ### Residuals
 
-Under
+Under Construction
+
+## Confusion Matrix
+
+
+```{r,echo=FALSE}
+mod$conf_test %>% 
+        data.table() %>%
+        .[,outcome := V1]%>%
+        .[,prediction:= V2] %>%
+        .[,prediction:= paste0("predicted\n",prediction)]%>%
+        .[,`:=`(V1=NULL,V2=NULL)]%>%
+        dcast(prediction~outcome,value.var="N") %>%
+        flextable() %>%
+        border_remove() %>%
+        vline(part="all",j=1:4,border=fp_border(color="#277150"))%>%
+        hline(part="all",border=fp_border(color="#277150"))%>%
+        hline_bottom(part="all",border=fp_border(color="#277150"))%>%
+        bg(part="body",j=1,bg="#277150")%>%
+        bg(part="header",bg="#277150") %>%
+        bg(part="body",j=2:4,bg="#C8F0D8") %>%
+        color(part="body",j=1,color="#C8F0D8")%>%
+        color(part="header",j=2:4,color="#C8F0D8")%>%
+        color(part="body",j=2:4,color="#277150") %>%
+        align(part="all",align="center") %>%
+        bg(part="header",j=1,bg="white") %>%
+        color(part="header",j=1,color="white")
+```
 
 ## Sub-model Performance  {.tabset .tabset-pills}
 
@@ -181,33 +208,20 @@ Under
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$home_roc,"Home Team Wins")
-
-test <- classification_table(mod$conf_test,"home win") %>%gen_grob() 
-test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
-
-plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
+roc
 ```
 
 ### Away-win
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$away_roc,"Away Team Wins")
-
-test <- classification_table(mod$conf_test,"away win") %>%gen_grob() 
-test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
-
-plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
+roc
 ```
 
 ### Tie
 
 ```{r,echo=FALSE,fig.width=10}
 roc <- roc_plot(mod$tie_roc,"Tie")
-
-
-test <- classification_table(mod$conf_test,"tie") %>%gen_grob() 
-test <- plot_grid(test,NULL,nrow=2,rel_heights = c(2,3))
-
-plot_grid(roc,NULL,test,rel_widths = c(15,1,6),nrow=1)
+roc
 ```
 
