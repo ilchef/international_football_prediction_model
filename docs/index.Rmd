@@ -115,7 +115,7 @@ classification_table <- function(roc_table,model){
 
 ### Summary
 
-The model is a multinomial log-linear model trained to classify probabilities of three outcomes: home-team win, away-team-win or tie.
+The model is a multinomial logistic regression model trained to classify probabilities of three outcomes: home-team win, away-team-win or tie.
 
 
 
