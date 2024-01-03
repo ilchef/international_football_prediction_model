@@ -40,11 +40,11 @@ ui_prediction_app <- shinyUI(fluidPage(
            h4("Match Input:"),
            br(),   
            
-           selectInput("home_team", "Select Home Team:", choices = country_list, selected = "DO49184"),
+           selectInput("home_team", "Select Home Team:", choices = country_list, selected = "france"),
            
            br(),   
            
-           selectInput("away_team", "Select Away Team:", choices = country_list, selected = "DO49184"),
+           selectInput("away_team", "Select Away Team:", choices = country_list, selected = "brazil"),
            
            br(),
            

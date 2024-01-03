@@ -21,8 +21,22 @@ read in base data
 matches_ts <-readRDS("data/input_cleaned/matches_cleaned_ts.rds")%>%setDT()
 rankings_ts <-readRDS("data/input_cleaned/rankings_cleaned_ts.rds")%>%setDT()
 
-source("functions/merge_rankings_matches.R")
-source("functions/create_pit_features.R")
+source("functions/r/merge_rankings_matches.R")
+source("functions/r/create_pit_features.R")
+source("functions/r/extract_last_n_records.R")
+source("functions/r/save_rds_and_csv.R")
+```
+
+Save down matches data that informs last n matches (will display in app)
+```{r}
+historical_lookback <- 9
+data_date <- pmax(max(rankings_ts$rank_date),max(matches_ts$date))
+
+last_n_matches <- extract_last_n_records(matches_ts,historical_lookback)
+
+save_rds_and_csv(last_n_matches,paste0("data/current_pit/last_",historical_lookback,"_matches_",format(data_date,"%b%Y")))
+
+rm(last_n_matches)
 ```
 
 Create
@@ -37,7 +51,6 @@ pit_features <- create_pit_features(matches_ts,rankings_features,n=c(9,3))
 
 save data
 ```{r}
-saveRDS(pit_features,"data/current_pit/input_cleaned_pit_predictions.rds")
-fwrite(pit_features,"data/current_pit/input_cleaned_pit_predictions.csv")
+save_rds_and_csv(pit_features,paste0("data/current_pit/input_cleaned_pit_predictions_",format(data_date,"%b%Y")))
 ```
 
