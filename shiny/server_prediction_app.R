@@ -38,19 +38,22 @@ server_prediction_app <- function(input,output){
   outcome_graph <- reactive({
     prediction_final() %>%
       setDT() %>%
-      .[,variable:=fct_relevel(variable,c("home.win","tie","away.win"))]%>%
+      .[,variable:=case_when(variable=="home.win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
+      .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))]%>%
       ggplot() + 
-      geom_bar(aes(x=variable,y=value),stat="identity") +
+      geom_bar(aes(x=variable,y=value,fill=variable),stat="identity") +
       # These variables are unique to prob vs odds
-      geom_text(aes(x=variable,y=value+0.05,label=scales::percent(value,accuracy=0.01L)))+
-      ylim(c(0,1))+
+      geom_text(aes(x=variable,y=value+0.05,label=scales::percent(value,accuracy=0.01L)),size=7)+
+      ylim(c(0,1.06))+
       #########3
       theme(axis.title = element_blank()
             ,axis.ticks = element_blank()
             ,panel.grid = element_blank()
             ,axis.text.y = element_blank()
+            ,axis.text.x = element_text(size=17,color="black",face="bold")
             ,panel.background = element_blank()
-            )
+            ) +
+      scale_fill_manual(values=c("#551fbd","#cecece","#a2eacb"))
             
   })
 
