@@ -1,6 +1,6 @@
 server_prediction_app <- function(input,output){
   
-  # Reactive Prediction
+  # Part 1: Reactive Prediction
   temp <- reactive({two_countries_data_prep(data,home_team=input$home_team,away_team=input$away_team,input$neutral_grounds)})
   
   # Normalise neutral grounds prediction
@@ -19,15 +19,47 @@ server_prediction_app <- function(input,output){
   
   prediction_final <- reactive({
     if(input$neutral_grounds){
-      normalise_neutral_prediction(prediction_normal(),prediction_inverse())
+      normalise_neutral_prediction(prediction_normal(),prediction_inverse()) %>% melt()
     } else {
-      data.frame(as.list(predict(mod_obj,type="probs",newdata=temp())))
+      prediction_normal() %>% melt()
     }
   })
   
   
-  output$prediction <- renderTable({
-    prediction_final()
-  })
   
+  ############################################################################
+  
+  # Part 2: Last x matches summary table
+  
+  ############################################################################
+  
+  # Part 3: Outcome Graph
+  
+  outcome_graph <- reactive({
+    prediction_final() %>%
+      setDT() %>%
+      .[,variable:=fct_relevel(variable,c("home.win","tie","away.win"))]%>%
+      ggplot() + 
+      geom_bar(aes(x=variable,y=value),stat="identity") +
+      # These variables are unique to prob vs odds
+      geom_text(aes(x=variable,y=value+0.05,label=scales::percent(value,accuracy=0.01L)))+
+      ylim(c(0,1))+
+      #########3
+      theme(axis.title = element_blank()
+            ,axis.ticks = element_blank()
+            ,panel.grid = element_blank()
+            ,axis.text.y = element_blank()
+            ,panel.background = element_blank()
+            )
+            
+  })
+
+  ############################################################################
+  
+  # Part X: Output
+  
+  
+  output$outcome_graph <- renderPlot({
+    outcome_graph()
+  })
 }

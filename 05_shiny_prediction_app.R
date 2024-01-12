@@ -6,9 +6,9 @@ rm(list=ls())
 library(data.table)
 library(dplyr)
 library(stringr)
+library(forcats)
 
 library(ggplot2)
-library(plotly)
 
 library(shiny)
 library(shinyWidgets)
