@@ -1,0 +1,46 @@
+
+/* Radio Buttons */
+
+.btn-primary.active, .btn-primary:active, .open > .dropdown-toggle.btn-primary {
+    color: #fff;
+    background-color: #494949;
+    background-image: none;
+    border-color: #494949;
+}
+.btn-primary, .btn-primary{
+    color: #fff;
+    background-color: #8f8f8f;
+    background-image: none;
+    border-color: #8f8f8f;
+}
+.btn-primary.hover, .btn-primary:hover{
+    color: #fff;
+    background-color: #8f8f8f;
+    background-image: none;
+    border-color: #8f8f8f;
+}
+.btn-primary.active, .btn-primary:focus{
+    color: #fff;
+    background-color: #494949;
+    background-image: none;
+    border-color: #494949;
+}
+.btn-primary.focus, .btn-primary:focus{
+    color: #fff;
+    background-color: #494949;
+    background-image: none;
+    border-color: #494949;
+}
+
+/* Switch Button */
+/* Pt1 on */
+.bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-success, .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-success {
+    background: #28a745;
+    color: #fff;
+}
+
+/* Pt2 off */
+.bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-default, .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-default {
+    background: #eee;
+    color: rgba(0,0,0,0.87);
+}

@@ -25,7 +25,16 @@ server_prediction_app <- function(input,output){
     }
   })
   
-  
+  #  Data Prep
+  prediction_final_reformat <- reactive({
+    prediction_final() %>%
+      setDT()%>%
+      copy()%>%
+      .[,fmp:=1/value]%>%
+      .[,variable:=case_when(variable=="home.win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
+      .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))] %>%
+      .[,metric:= case_when(input$output_metric=="Show Fair-market Price (Reciprocal)"~fmp,TRUE~value)]
+  })
   
   ############################################################################
   
@@ -35,26 +44,21 @@ server_prediction_app <- function(input,output){
   
   # Part 3: Outcome Graph
   
+  # Max fmp
+  max_fmp<- reactive({max(prediction_final_reformat()$fmp)})
+  
   outcome_graph <- reactive({
-    prediction_final() %>%
-      setDT() %>%
-      .[,variable:=case_when(variable=="home.win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
-      .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))]%>%
-      ggplot() + 
-      geom_bar(aes(x=variable,y=value,fill=variable),stat="identity") +
-      # These variables are unique to prob vs odds
-      geom_text(aes(x=variable,y=value+0.05,label=scales::percent(value,accuracy=0.01L)),size=7)+
-      ylim(c(0,1.06))+
-      #########3
-      theme(axis.title = element_blank()
-            ,axis.ticks = element_blank()
-            ,panel.grid = element_blank()
-            ,axis.text.y = element_blank()
-            ,axis.text.x = element_text(size=17,color="black",face="bold")
-            ,panel.background = element_blank()
-            ) +
-      scale_fill_manual(values=c("#551fbd","#cecece","#a2eacb"))
-            
+    #if(input$output_metric=="Show Fair-market Price (Reciprocal)"){ # If we are using fmp
+    if(input$output_metric=="Show as probability"){ # If we are using fmp
+      initial_shiny_graph(prediction_final_reformat()) +
+        geom_text(aes(x=variable,y=metric+0.05*max_fmp(),label=round(metric,3)),size=7)+
+        geom_hline(aes(yintercept=1),color="red",linetype=2)+
+        ylim(c(0,max_fmp()*1.1))
+    } else{ # Else probabilities
+      initial_shiny_graph(prediction_final_reformat()) +
+        geom_text(aes(x=variable,y=metric+0.05,label=scales::percent(metric,accuracy=0.01L)),size=7)+
+        ylim(c(0,1.05))
+    }
   })
 
   ############################################################################
@@ -65,4 +69,5 @@ server_prediction_app <- function(input,output){
   output$outcome_graph <- renderPlot({
     outcome_graph()
   })
+  
 }

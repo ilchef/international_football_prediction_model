@@ -1,13 +1,7 @@
 ui_prediction_app <- shinyUI(fluidPage(
   
-  # tags$head(
-  #   includeCSS("www/styles.css")
-  # ),
-  # 
-  # tags$head(
-  #   includeScript("www/ggcircos.js")
-  # ),
-  includeCSS("shiny/shiny_css.css"),
+
+  includeCSS("shiny/css/shiny_css.css"),
   HTML("<h3>International Men's Football Prediction Model:</h3>"),
   fluidRow(
     column(12,
@@ -43,10 +37,16 @@ ui_prediction_app <- shinyUI(fluidPage(
   
   fluidRow(
     column(12,
-           h3("Model Output:"),
            br(),
+           h3("Model Output:"),
+           radioGroupButtons(
+             inputId = "output_metric",
+             label = "Select Metric:", 
+             choices = c("Show in logit space","Show as probability"),
+             #choices = c("Show Probabilities","Show Fair-market Price (Reciprocal)"),
+             status = "primary"
+           ),
            plotOutput("outcome_graph",width="1000px"),
-           
            p("")
     )),
 )
