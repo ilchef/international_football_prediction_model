@@ -16,7 +16,7 @@ ui_prediction_app <- shinyUI(fluidPage(
            
            HTML("<button type='button' class='btn' data-toggle='collapse' style='float:left' data-target='#app_info'><span class='glyphicon glyphicon-collapse-down'></span> More Information</button>"),
            
-           br(),  br(), 
+           br(),  
            
            
     )),
@@ -29,25 +29,33 @@ ui_prediction_app <- shinyUI(fluidPage(
     ),
   ),
   fluidRow(
-    column(6,selectInput("home_team", "Select Home Team:", choices = country_list, selected = "france")),
-    column(6,selectInput("away_team", "Select Away Team:", choices = country_list, selected = "brazil")),
+    column(4,selectInput("home_team", "Select Home Team:", choices = country_list, selected = "france")),
+    column(4,selectInput("away_team", "Select Away Team:", choices = country_list, selected = "brazil")),
     br()
   ),
   
   
   fluidRow(
     column(12,
-           br(),
            h3("Model Output:"),
            radioGroupButtons(
              inputId = "output_metric",
              label = "Select Metric:", 
-             choices = c("Show in logit space","Show as probability"),
-             #choices = c("Show Probabilities","Show Fair-market Price (Reciprocal)"),
+             choices = c("Show Probabilities","Show Fair-market Price (Reciprocal)"),
              status = "primary"
            ),
-           plotOutput("outcome_graph",width="1000px"),
-           p("")
+           plotOutput("outcome_graph",width="700px",height="300px"),
+           br(),
+           h3("Last 9 Matches:"),
+           column(4,
+              h4(textOutput("home_team_name")),    
+              DT::dataTableOutput('home_dt')
+           ),
+           column(4,
+                  h4(textOutput("away_team_name")), 
+                  DT::dataTableOutput('away_dt')
+           )
+           
     )),
 )
 )

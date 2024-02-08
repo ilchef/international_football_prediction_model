@@ -1,7 +1,12 @@
 server_prediction_app <- function(input,output){
   
+  
+  ############################################################################
+  
   # Part 1: Reactive Prediction
+  
   temp <- reactive({two_countries_data_prep(data,home_team=input$home_team,away_team=input$away_team,input$neutral_grounds)})
+  
   
   # Normalise neutral grounds prediction
   # home Country 1 vs away Country 2 should be the same as home Country 2 vs away Country 1 for neutral grounds
@@ -19,9 +24,9 @@ server_prediction_app <- function(input,output){
   
   prediction_final <- reactive({
     if(input$neutral_grounds){
-      normalise_neutral_prediction(prediction_normal(),prediction_inverse()) %>% melt()
+      normalise_neutral_prediction(prediction_normal(),prediction_inverse()) %>% setDT()%>%melt()
     } else {
-      prediction_normal() %>% melt()
+      prediction_normal() %>% setDT() %>%melt()
     }
   })
   
@@ -40,6 +45,43 @@ server_prediction_app <- function(input,output){
   
   # Part 2: Last x matches summary table
   
+  home_lastn <- reactive({
+    last_n_matches %>%
+      copy() %>%
+      .[record_country==input$home_team] %>%
+      .[order(-date)]%>%
+      .[,date := format(date,"%d/%m/%y")]%>%
+      .[,.(opponent,date,outcome)] 
+    })
+  
+  output$home_dt <- renderDataTable(
+    datatable(home_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE)%>%
+      formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
+    ,server=FALSE
+    )
+  
+  home_team_name <- reactive({input$home_team})
+  output$home_team_name <- renderText({home_team_name()})
+  
+  away_lastn <- reactive({
+    last_n_matches %>%
+      copy() %>%
+      .[record_country==input$away_team] %>%
+      .[order(-date)]%>%
+      .[,date := format(date,"%d/%m/%y")]%>%
+      .[,.(opponent,date,outcome)] 
+  })
+  
+  output$away_dt <- renderDataTable(
+    datatable(away_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE) %>%
+      formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
+    ,server=FALSE
+    )
+  
+  away_team_name <- reactive({input$away_team})
+  output$away_team_name <- renderText({away_team_name()})
+  
+
   ############################################################################
   
   # Part 3: Outcome Graph
@@ -48,8 +90,7 @@ server_prediction_app <- function(input,output){
   max_fmp<- reactive({max(prediction_final_reformat()$fmp)})
   
   outcome_graph <- reactive({
-    #if(input$output_metric=="Show Fair-market Price (Reciprocal)"){ # If we are using fmp
-    if(input$output_metric=="Show as probability"){ # If we are using fmp
+    if(input$output_metric=="Show Fair-market Price (Reciprocal)"){ # If we are using fmp
       initial_shiny_graph(prediction_final_reformat()) +
         geom_text(aes(x=variable,y=metric+0.05*max_fmp(),label=round(metric,3)),size=7)+
         geom_hline(aes(yintercept=1),color="red",linetype=2)+
