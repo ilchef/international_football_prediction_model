@@ -84,7 +84,7 @@ server_prediction_app <- function(input,output){
 
   ############################################################################
   
-  # Part 3: Outcome Graph
+  # Part 3: Graphs
   
   # Max fmp
   max_fmp<- reactive({max(prediction_final_reformat()$fmp)})
@@ -101,7 +101,10 @@ server_prediction_app <- function(input,output){
         ylim(c(0,1.05))
     }
   })
-
+  
+  rankings_graph <- reactive({
+    rankings_shiny_graph(df=data,home=input$home_team,away=input$away_team)
+  })
   ############################################################################
   
   # Part X: Output
@@ -111,4 +114,7 @@ server_prediction_app <- function(input,output){
     outcome_graph()
   })
   
+  output$rankings_graph <- renderPlot({
+    rankings_graph()
+  })
 }

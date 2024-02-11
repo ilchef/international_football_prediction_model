@@ -29,8 +29,8 @@ ui_prediction_app <- shinyUI(fluidPage(
     ),
   ),
   fluidRow(
-    column(4,selectInput("home_team", "Select Home Team:", choices = country_list, selected = "france")),
-    column(4,selectInput("away_team", "Select Away Team:", choices = country_list, selected = "brazil")),
+    column(4,selectInput("home_team", "Select Home Team:", choices = country_list, selected = "netherlands")),
+    column(4,selectInput("away_team", "Select Away Team:", choices = country_list, selected = "denmark")),
     br()
   ),
   
@@ -44,7 +44,8 @@ ui_prediction_app <- shinyUI(fluidPage(
              choices = c("Show Probabilities","Show Fair-market Price (Reciprocal)"),
              status = "primary"
            ),
-           plotOutput("outcome_graph",width="700px",height="300px"),
+           plotOutput("outcome_graph",width="800px",height="300px"),
+           plotOutput("rankings_graph",width="80%",height="250px"),
            br(),
            h3("Last 9 Matches:"),
            column(4,
