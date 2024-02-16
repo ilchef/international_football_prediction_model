@@ -7,29 +7,42 @@ rankings_shiny_graph <- function(df,home,away){
     .[, rank := frank(-points)]%>%
     .[,alpha_dummy:= case_when(team%in%c(home,away)~1,TRUE~0)]
   
-  data_temp %>%
-    ggplot()+
-    #geom_bar(aes(y=points,x=team,color=dummy),stat="identity")+
-    geom_vline(data=data_temp[team==away],aes(xintercept=-points),linetype=2,color="#a2eacb",alpha=0.7)+
-    geom_vline(data=data_temp[team==home],aes(xintercept=-points),linetype=2,color="#551fbd",alpha=0.7)+
+  plotly::ggplotly(
+    data_temp %>%
+      ggplot()+
+      #geom_bar(aes(y=points,x=team,color=dummy),stat="identity")+
+      geom_vline(data=data_temp[team==away],aes(xintercept=-points),linetype=2,color="#a2eacb",alpha=0.7)+
+      geom_vline(data=data_temp[team==home],aes(xintercept=-points),linetype=2,color="#551fbd",alpha=0.7)+
+      
+      geom_text(data=data_temp[team==away],aes(x=-points+ifelse(points>1000,45,-280),y=-0.115,label=sprintf("%s rank:\n#%s (%spts)",away,rank,points)),color="#a2eacb",size=4,hjust=0)+
+      geom_text(data=data_temp[team==home],aes(x=-points+ifelse(points>1000,45,-280),y=-0.15,label=sprintf("%s rank:\n#%s (%spts)",home,rank,points)),color="#551fbd",size=4,hjust=0)+
+      
+      geom_jitter(aes(y=0
+                      ,x=-points
+                      ,color=dummy
+                      ,alpha=alpha_dummy
+                      ,size=alpha_dummy
+                      ,text= paste("Country: ", team, "<br>", 
+                                   "Rank: ", rank, "<br>")
+                      ),stat="identity",height=.03)+
+      scale_alpha(range=c(0.65,1))+
+      scale_size(range=c(2,4))+
+      theme(axis.title = element_blank()
+            ,axis.ticks = element_blank()
+            ,panel.grid = element_blank()
+            ,axis.text = element_blank()
+            #,axis.line.x=element_line()
+            ,panel.background = element_blank()
+            ,legend.position="none"
+            ,plot.title = element_text(hjust = 0.5)
+      ) +
+      ylim(c(-.16,.03))+
+      xlim(c(-max(data_temp$points),-min(data_temp$points)+100))+
+      scale_color_manual(values=c("#551fbd","#a2eacb","#cecece"))
+    ,tooltip = c("text")
+  )%>% 
+  config(displayModeBar = F)
     
-    geom_text(data=data_temp[team==away],aes(x=-points+ifelse(points>1000,45,-280),y=0.16,label=sprintf("%s rank:\n#%s (%spts)",away,rank,points)),color="#a2eacb",size=7,hjust=0)+
-    geom_text(data=data_temp[team==home],aes(x=-points+ifelse(points>1000,45,-280),y=0.23,label=sprintf("%s rank:\n#%s (%spts)",home,rank,points)),color="#551fbd",size=7,hjust=0)+
-    
-    geom_jitter(aes(y=0,x=-points,color=dummy,alpha=alpha_dummy,size=alpha_dummy),stat="identity",height=.05)+
-    scale_alpha(range=c(0.65,1))+
-    scale_size(range=c(3,5))+
-    theme(axis.title = element_blank()
-          ,axis.ticks = element_blank()
-          ,panel.grid = element_blank()
-          ,axis.text.y = element_blank()
-          ,axis.text.x = element_blank()
-          ,panel.background = element_blank()
-          ,legend.position="none"
-    ) +
-    ylim(c(-.05,.25))+
-    xlim(c(-max(data_temp$points),-min(data_temp$points)+100))+
-    scale_color_manual(values=c("#551fbd","#a2eacb","#cecece"))
 }
 
 

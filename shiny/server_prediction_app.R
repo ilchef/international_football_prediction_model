@@ -55,7 +55,7 @@ server_prediction_app <- function(input,output){
     })
   
   output$home_dt <- renderDataTable(
-    datatable(home_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE)%>%
+    datatable(home_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single')%>%
       formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
     ,server=FALSE
     )
@@ -73,10 +73,28 @@ server_prediction_app <- function(input,output){
   })
   
   output$away_dt <- renderDataTable(
-    datatable(away_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE) %>%
+    datatable(away_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single') %>%
       formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
     ,server=FALSE
     )
+  
+  # single selection DT
+  proxyList <- reactive({
+    proxies = list()
+    i<-1
+    for (tableID in c("home_dt","away_dt")){
+      proxies[[i]] = dataTableProxy(tableID)
+      i<-i+1
+    }
+    return(proxies)
+  }) 
+  
+  reactiveSelection <- reactive({
+    rownumhome<- input$home_dt_rows_selected
+    rownumaway <- input$away_dt_rows_selected
+    if (length(rownumhome) > 0){return(c(rownumhome, 1))}
+    if (length(rownumaway ) > 0){return(c(rownumaway , 2))}
+  })
   
   away_team_name <- reactive({input$away_team})
   output$away_team_name <- renderText({away_team_name()})
@@ -114,7 +132,12 @@ server_prediction_app <- function(input,output){
     outcome_graph()
   })
   
-  output$rankings_graph <- renderPlot({
+  output$rankings_graph <- plotly::renderPlotly({
     rankings_graph()
   })
+  
+  ############################################################################
+  
+  # Part X: Output
+  
 }
