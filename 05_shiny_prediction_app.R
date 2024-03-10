@@ -12,6 +12,7 @@ library(ggplot2)
 library(plotly)
 
 library(shiny)
+library(shiny.fluent)
 library(shinyWidgets)
 library(DT)
 

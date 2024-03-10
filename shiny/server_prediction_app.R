@@ -38,7 +38,7 @@ server_prediction_app <- function(input,output){
       .[,fmp:=1/value]%>%
       .[,variable:=case_when(variable=="home.win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
       .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))] %>%
-      .[,metric:= case_when(input$output_metric=="Show Fair-market Price (Reciprocal)"~fmp,TRUE~value)]
+      .[,metric:= case_when(input$output_metric=="Show Market Price"~fmp,TRUE~value)]
   })
   
   ############################################################################
@@ -56,7 +56,10 @@ server_prediction_app <- function(input,output){
   
   output$home_dt <- renderDataTable(
     datatable(home_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single')%>%
-      formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
+      formatStyle("outcome"
+                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","NA","#FFA4A4"))
+                  ,alpha=0.5) %>%
+      formatStyle(columns =names(home_lastn()),fontSize = '80%')
     ,server=FALSE
     )
   
@@ -74,7 +77,10 @@ server_prediction_app <- function(input,output){
   
   output$away_dt <- renderDataTable(
     datatable(away_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single') %>%
-      formatStyle("outcome",backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","#F5EF8E","#FFA4A4")))
+      formatStyle("outcome"
+                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","NA","#FFA4A4"))
+                  ,alpha=.5) %>%
+      formatStyle(columns =names(away_lastn()),fontSize = '80%')
     ,server=FALSE
     )
   
@@ -108,7 +114,7 @@ server_prediction_app <- function(input,output){
   max_fmp<- reactive({max(prediction_final_reformat()$fmp)})
   
   outcome_graph <- reactive({
-    if(input$output_metric=="Show Fair-market Price (Reciprocal)"){ # If we are using fmp
+    if(input$output_metric=="Show Market Price"){ # If we are using fmp
       initial_shiny_graph(prediction_final_reformat()) +
         geom_text(aes(x=variable,y=metric+0.05*max_fmp(),label=round(metric,3)),size=7)+
         geom_hline(aes(yintercept=1),color="red",linetype=2)+

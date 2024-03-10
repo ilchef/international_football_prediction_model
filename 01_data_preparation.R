@@ -5,16 +5,21 @@ library(dplyr)
 library(stringr)
 library(sqldf)
 
-lapply(paste0("functions/",list.files("functions")),source) %>% invisible()
+lapply(paste0("functions/r/",list.files("functions/r/")),source) %>% invisible()
 set_workspace()
 
 # 1.0 Read Data
 input_files <- list.files("data/input") 
 
 rankings_ts <- input_files %>% 
-        str_subset(pattern="^fifa_ranking-.*\\.csv")
+        str_subset(pattern="^fifa_ranking-.*\\.csv")%>% 
+        sort(decreasing=T)
 
-rankings_ts <- fread(paste0("data/input/",rankings_ts))
+rankings_ts <- fread(paste0("data/input/",rankings_ts[1])) %>%
+  .[,rank_change := rank-previous_rank] %>%
+  #temp
+  .[,confederation:=conf] %>%
+  .[,rank_date:= as.Date(rank_date)]
 
 matches_ts <- fread("data/input/results.csv")
 
@@ -25,7 +30,7 @@ max_date_matches <- max(matches_ts$date)
 
 
 filter_date_upper <- max(max_date_matches,max_date_rankings)
-filter_date_lower <- filter_date_upper - 365*15
+filter_date_lower <- filter_date_upper - 365*16
 
 rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_upper)]
 

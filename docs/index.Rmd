@@ -26,7 +26,7 @@ library(cowplot)
 
 setwd("/Users/tilchef/Desktop/code/football_prediction/international_football_prediction_model")
 
-model_name <- "21Nov23"
+model_name <- "15Feb24"
 mod <- readRDS(paste0("models/logreg_",model_name,".rds"))
 today <- format(as.Date(Sys.time()),"%d%b%y")
 
