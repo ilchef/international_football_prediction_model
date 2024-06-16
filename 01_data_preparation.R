@@ -19,9 +19,13 @@ rankings_ts <- fread(paste0("data/input/",rankings_ts[1])) %>%
   .[,rank_change := rank-previous_rank] %>%
   #temp
   .[,confederation:=conf] %>%
-  .[,rank_date:= as.Date(rank_date)]
+  .[,rank_date:= as.Date(rank_date)] %>%
+  .[,flagUrl := NULL] %>%
+  unique()
 
-matches_ts <- fread("data/input/results.csv")
+matches_ts <- fread("data/input/results.csv") %>%
+  .[,date := as.Date(date)]%>%
+  .[!is.na(home_score)]
 
 # 2.1 Clean data - date matches
 
@@ -30,7 +34,7 @@ max_date_matches <- max(matches_ts$date)
 
 
 filter_date_upper <- max(max_date_matches,max_date_rankings)
-filter_date_lower <- filter_date_upper - 365*16
+filter_date_lower <- as.Date(filter_date_upper) - 365*16
 
 rankings_ts <- rankings_ts[rank_date %between% c(filter_date_lower,filter_date_upper)]
 
