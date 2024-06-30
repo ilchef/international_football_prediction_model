@@ -1,9 +1,11 @@
 merge_rankings_matches <- function(matches_df_input,rankings_df_input){
+        # matches_df_input <- matches_ts_hist_feats %>% copy()
+        # rankings_df_input <- rankings_ts %>% copy()
         #create eff from/to date
         rankings_df <- rankings_df_input %>% copy()
         rankings_df[,c("country_abrv","previous_points","rank"):= NULL]
-        rankings_df[order(rank_date)]
-        rankings_df[,last_rank_date := coalesce(shift(rank_date,type="lag",n=1L),as.IDate("2000-01-01")),by=country_full]
+        rankings_df <- rankings_df[order(rank_date)]
+        rankings_df[,last_rank_date := coalesce(shift(rank_date,type="lag",n=1L),as.Date("2000-01-01")),by=country_full]
         
         matches_df <- matches_df_input %>% copy()
         
@@ -11,7 +13,7 @@ merge_rankings_matches <- function(matches_df_input,rankings_df_input){
         rankings_df <- rankings_df[,rank_date := as.character(rank_date)] %>%
                 .[,last_rank_date := as.character(last_rank_date)]
         
-        output  <- sqldf("
+        output  <- sqldf(" 
         select
         a.*
         ,b.total_points as home_fifa_points

@@ -1,9 +1,11 @@
 import scrapy
+import time
 import json
 from datetime import datetime
 
 class QuotesSpider(scrapy.Spider):
-    user_agent = 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36'
+    #user_agent = 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36'
+    user_agent = 'testing_dl-project (http://example.com)'
 
 class MenrankingSpider(scrapy.Spider):
     name = 'menranking'
@@ -13,7 +15,7 @@ class MenrankingSpider(scrapy.Spider):
     def parse(self, response):
         script_content = response.xpath('//script[contains(., "dates")]/text()').extract_first()
         date_list = json.loads(script_content)
-        #json.dump(date_list,open("myfile.json", "w") )#
+        json.dump(date_list,open("myfile.json", "w") )#
 
         date_list = date_list['props']['pageProps']['pageData']['ranking']['dates']
         print(date_list)
@@ -27,6 +29,7 @@ class MenrankingSpider(scrapy.Spider):
                 date = datetime.strptime(date_text, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d')
                 print(f"{date}\n")
                 yield scrapy.Request(url=url, callback=self.parse_ranking_data, meta={'date':date})
+                time.sleep(30)
 
             
 
@@ -47,4 +50,4 @@ class MenrankingSpider(scrapy.Spider):
             }
 
 
-#scrapy runspider menrankings_v2.py -o data.csv
+#scrapy runspider 01_scrape_rankings_data.py -o data.csv

@@ -23,6 +23,7 @@ standardise_countries <- function(dt,varname){
                          ,str_detect(get(varname),"szã©kely land")~"swaziland"
                          ,str_detect(get(varname),"united states")~"usa"
                          ,str_detect(get(varname),"united states virgin islands")~"us virgin islands"
+                         ,str_detect(get(varname),"taipei|taiwan") ~ "taiwan"
                          ,TRUE~get(varname)
                          )]
 
