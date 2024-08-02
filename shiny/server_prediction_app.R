@@ -56,8 +56,9 @@ server_prediction_app <- function(input,output){
   
   output$home_dt <- renderDataTable(
     datatable(home_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single')%>%
+      formatStyle(columns=colnames(home_lastn()),backgroundColor="white",alpha=0.5)%>%
       formatStyle("outcome"
-                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","NA","#FFA4A4"))
+                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","white","#FFA4A4"))
                   ,alpha=0.5) %>%
       formatStyle(columns =names(home_lastn()),fontSize = '80%')
     ,server=FALSE
@@ -77,8 +78,9 @@ server_prediction_app <- function(input,output){
   
   output$away_dt <- renderDataTable(
     datatable(away_lastn(),options = list(dom = 't',ordering=F),colnames=NULL,rownames=FALSE,selection='single') %>%
+      formatStyle(columns=colnames(away_lastn()),backgroundColor="white",alpha=0.5)%>%
       formatStyle("outcome"
-                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","NA","#FFA4A4"))
+                  ,backgroundColor = styleEqual(c("win","tie","loss"),c("#9ADD6F","white","#FFA4A4"))
                   ,alpha=.5) %>%
       formatStyle(columns =names(away_lastn()),fontSize = '80%')
     ,server=FALSE

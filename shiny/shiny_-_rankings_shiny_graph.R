@@ -10,12 +10,11 @@ rankings_shiny_graph <- function(df,home,away){
   plotly::ggplotly(
     data_temp %>%
       ggplot()+
-      #geom_bar(aes(y=points,x=team,color=dummy),stat="identity")+
       geom_vline(data=data_temp[team==away],aes(xintercept=-points),linetype=2,color="#a2eacb",alpha=0.7)+
       geom_vline(data=data_temp[team==home],aes(xintercept=-points),linetype=2,color="#551fbd",alpha=0.7)+
       
-      geom_text(data=data_temp[team==away],aes(x=-points+ifelse(points>1000,45,-280),y=-0.115,label=sprintf("%s rank:\n#%s (%spts)",away,rank,points)),color="#a2eacb",size=4,hjust=0)+
-      geom_text(data=data_temp[team==home],aes(x=-points+ifelse(points>1000,45,-280),y=-0.15,label=sprintf("%s rank:\n#%s (%spts)",home,rank,points)),color="#551fbd",size=4,hjust=0)+
+      geom_text(data=data_temp[team==away],aes(x=-points+ifelse(points>1000,80,-160),y=-0.115,label=sprintf("%s rank:\n#%s (%spts)",away,rank,points)),color="#a2eacb",size=4,hjust=0)+
+      geom_text(data=data_temp[team==home],aes(x=-points+ifelse(points>1000,80,-160),y=-0.15,label=sprintf("%s rank:\n#%s (%spts)",home,rank,points)),color="#551fbd",size=4,hjust=0)+
       
       geom_jitter(aes(y=0
                       ,x=-points
@@ -31,8 +30,8 @@ rankings_shiny_graph <- function(df,home,away){
             ,axis.ticks = element_blank()
             ,panel.grid = element_blank()
             ,axis.text = element_blank()
-            #,axis.line.x=element_line()
             ,panel.background = element_blank()
+            ,plot.border= element_rect(color="#494949",fill="white")
             ,legend.position="none"
             ,plot.title = element_text(hjust = 0.5)
       ) +
@@ -44,6 +43,3 @@ rankings_shiny_graph <- function(df,home,away){
   config(displayModeBar = F)
     
 }
-
-
-#rankings_shiny_graph(df,"croatia","australia")

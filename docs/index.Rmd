@@ -26,7 +26,7 @@ library(cowplot)
 
 setwd("/Users/tilchef/Desktop/code/football_prediction/international_football_prediction_model")
 
-model_name <- "15Feb24"
+model_name <- "14Jul24"
 mod <- readRDS(paste0("models/logreg_",model_name,".rds"))
 today <- format(as.Date(Sys.time()),"%d%b%y")
 
@@ -186,6 +186,7 @@ mod$conf_test %>%
         .[,prediction:= paste0("predicted\n",prediction)]%>%
         .[,`:=`(V1=NULL,V2=NULL)]%>%
         dcast(prediction~outcome,value.var="N") %>%
+        data.frame()%>%
         flextable() %>%
         border_remove() %>%
         vline(part="all",j=1:4,border=fp_border(color="#277150"))%>%

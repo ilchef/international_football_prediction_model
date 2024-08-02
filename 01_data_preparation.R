@@ -16,11 +16,7 @@ rankings_ts <- input_files %>%
         sort(decreasing=T)
 
 rankings_ts <- fread(paste0("data/input/",rankings_ts[1])) %>%
-  .[,rank_change := rank-previous_rank] %>%
-  #temp
-  .[,confederation:=conf] %>%
   .[,rank_date:= as.Date(rank_date)] %>%
-  .[,flagUrl := NULL] %>%
   unique()
 
 matches_ts <- fread("data/input/results.csv") %>%

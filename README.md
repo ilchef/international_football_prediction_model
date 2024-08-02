@@ -44,6 +44,4 @@ This includes when countries 'merge' or 'demerge' (i.e. Yugoslavia). This isnt a
 
 Interactive model deploymeny on shinyapps: [link](https://tilchef.shinyapps.io/international_football_prediction_model/)
 
-## Performance:
 
-Model performance summary: [link](https://ilchef.github.io/international_football_prediction_model/).

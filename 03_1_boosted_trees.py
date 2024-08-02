@@ -1,5 +1,5 @@
 # Step 0: User Input
-data_version = "21Nov23"
+data_version = "04Apr24"
 seed = 123
 
 # Step 0.1 Config
@@ -11,6 +11,8 @@ import sklearn as skl
 import xgboost as xgb
 
 sys.path.append("functions/py")
+
+
 import py_modules
 
 
@@ -56,27 +58,31 @@ X_train.to_csv('testing_delete.csv')
 # Step 4: Train Model
 # Create the default XGBoost model object
 xgb_model = xgb.XGBClassifier(
-                            num_class=3,
-                            early_stopping_rounds=10, 
-                            eval_metric=['merror','mlogloss'], 
-                            
                             seed=seed)
 
 # Define the hyperparameter grid
-#param_grid = {
-#    'max_depth': [5,7],
-#    'learning_rate': [0.01],
-#    'subsample': [0.7]
-#}
+param_grid = {
+    'max_depth': [6,8,10],
+    'learning_rate': [0.01,0.02,0.3],
+    'subsample': [0.7,0.51q]
+}
 
 # Create the GridSearchCV object
-#grid_search = skl.model_selection.GridSearchCV(xgb_model, param_grid, cv=5, scoring='accuracy')
+grid_search = skl.model_selection.GridSearchCV(xgb_model, param_grid, cv=5, scoring='accuracy')
 
 # Fit the GridSearchCV object to the training data
-#grid_search.fit(X_train, y_train)
+grid_search.fit(X_train, y_train)
+
+# Retrieve the best parameters
+best_params = grid_search.best_params_
+print("Best parameters found: ", best_params)
 
 
-xgb_model.fit(X_train, y_train, eval_set = [(X_train,y_train),(X_val,y_val)])
-# Print the best set of hyperparameters and the corresponding score
-#print("Best set of hyperparameters: ", grid_search.best_params_)
-#print("Best score: ", grid_search.best_score_)
+xgb_model = xgb.XGBClassifier(**best_params
+                            ,seed=seed)
+
+xgb_model.fit(X_train, y_train
+                ,early_stopping_rounds=10
+                ,eval_metric=['merror','mlogloss']
+              , eval_set = [(X_train,y_train),(X_val,y_val)])
+
