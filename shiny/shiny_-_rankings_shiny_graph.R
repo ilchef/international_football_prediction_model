@@ -31,7 +31,6 @@ rankings_shiny_graph <- function(df,home,away){
             ,panel.grid = element_blank()
             ,axis.text = element_blank()
             ,panel.background = element_blank()
-            ,plot.border= element_rect(color="#494949",fill="white")
             ,legend.position="none"
             ,plot.title = element_text(hjust = 0.5)
       ) +
