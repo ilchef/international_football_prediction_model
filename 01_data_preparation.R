@@ -88,8 +88,8 @@ rm(rankings_ts,matches_ts_hist_feats)
 matches_x_rankings_ts <- matches_x_rankings_ts %>% 
         setDT() %>%
         .[,outcome := case_when(home_score == away_score ~ "tie"
-                                ,home_score > away_score ~ "home win"
-                                , TRUE ~ "away win")]
+                                ,home_score > away_score ~ "home_win"
+                                , TRUE ~ "away_win")]
 
 
 # 4.0 Save data

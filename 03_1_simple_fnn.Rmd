@@ -1,0 +1,194 @@
+---
+title: "03a_model_build_logreg"
+output: html_document
+date: "2022-11-19"
+---
+
+
+
+
+libraries + setup
+```{r}
+rm(list=ls())
+library(data.table)
+library(dplyr)
+library(nnet)
+library(ranger)
+library(caret)
+library(stringr)
+library(pROC)
+library(lubridate)
+
+source("functions/r/get_nnet_structure.R")
+```
+
+read in data
+```{r}
+input_date <- "19Nov24"
+data <- readRDS(paste0("data/output/final_model_data_multiclass__",input_date,".rds")) 
+
+data <- data [, .SD, .SDcols = patterns("outcome|date|neutral|tournament|last_9_matches|delta_rankings|home_team_|away_team_|fifa")]%>%
+        .[,friendly_flag := case_when(tournament=="Friendly" ~ 1,TRUE~0)] %>%
+        .[,world_cup_flag := case_when(str_detect(tournament,"FIFA World Cup")~1,TRUE~0)] %>%
+        .[,tournament:=NULL] %>%
+        .[,outcome:=as.factor(outcome)] %>%
+        na.omit()
+
+```
+
+
+# Split Train and Test Data
+```{r}
+data <- data[,outcome := as.factor(str_replace(outcome," ",""))]
+
+trainIndex <- createDataPartition(data$outcome,p=0.7,list=FALSE,times=1)
+test <- data[-trainIndex] %>% na.omit()
+train <- data[trainIndex] %>% na.omit()
+```
+
+
+Build simple FNN using CV + grid search
+```{r}
+
+size_grid <- expand.grid(size = seq(2, 8, by=1),decay=c(0,0.01,0.1))
+
+# Set up train control for cross-validation
+ctrl <- trainControl(
+  method = "cv",  # Cross-validation
+  number = 5,     # 5-fold cross-validation
+  classProbs = TRUE,  # Compute class probabilities
+  summaryFunction = multiClassSummary  # For multi-class classification
+)
+
+
+# Perform grid search
+nnet_grid <- train(
+  outcome ~ home2away_delta_rankings+
+  home_fifa_rank_change+
+  away_fifa_rank_change+
+  away_fifa_points+
+  home_fifa_points+
+  away_team_goals_scored_last_9_matches+
+  home_team_goals_scored_last_9_matches+
+  home_team_goals_conceded_last_9_matches+
+  away_team_goals_conceded_last_9_matches+
+  home_team_wins_last_9_matches+
+  away_team_wins_last_9_matches+
+  neutral,
+  data = train,
+  method = "nnet",
+  tuneGrid = size_grid,
+  trControl = ctrl,
+  maxit = 100,
+  trace = FALSE  # Suppress verbose output
+)
+
+# View results
+print(nnet_grid)
+
+# Best size parameter
+best_size <- nnet_grid$bestTune$size
+best_decay <- nnet_grid$bestTune$decay
+
+# Final model with best size
+final_model <- nnet(
+  outcome ~ home2away_delta_rankings+
+  home_fifa_rank_change+
+  away_fifa_rank_change+
+  away_fifa_points+
+  home_fifa_points+
+  away_team_goals_scored_last_9_matches+
+  home_team_goals_scored_last_9_matches+
+  home_team_goals_conceded_last_9_matches+
+  away_team_goals_conceded_last_9_matches+
+  home_team_wins_last_9_matches+
+  away_team_wins_last_9_matches+
+  neutral,
+  data = train, 
+  size = best_size, 
+  maxit = 100, 
+  decay = best_decay
+)
+```
+
+
+
+
+```{r}
+
+predictions <- predict(final_model,data) %>% 
+  data.frame()%>%
+  setDT() %>%
+  cbind(outcome=data$outcome) %>%
+  cbind(year=year(data$date)) %>%
+  .[,`:=`(
+    home_outcome = case_when(outcome=="homewin"~1,TRUE~0)
+    ,away_outcome = case_when(outcome=="awaywin"~1,TRUE~0)
+    ,tie_outcome = case_when(outcome=="tie"~1,TRUE~0)
+  )] %>%
+  .[trainIndex,train_data:=1] %>%
+  .[,train_data := coalesce(train_data,0)]%>%
+  na.omit()
+
+
+gini_tab <- rbind(
+predictions[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="all"]
+,predictions[train_data==1]%>%.[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="train"]
+,predictions[train_data==0]%>%.[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="test"]
+)
+
+cal <- rbind(
+  predictions[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+                      ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
+                      )]%>% .[,cat:="all"]
+  ,predictions[train_data==1]%>%.[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+                      ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
+                      )]%>% .[,cat:="train"]
+  ,predictions[train_data==0]%>%.[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+                      ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
+                      )]%>% .[,cat:="test"]
+)
+
+```
+
+```{r}
+temp <- get_nnet_structure(final_model)
+
+model_structure <- temp$connections %>%
+  ggplot()+
+  geom_segment(aes(x=from_lay,xend=to_lay,y=from_num,yend=to_num,group=1,color=weight,size=abs(weight)))+
+  scale_color_gradient2(low="#E05C4C",mid="#cecece",high="#25C728")+
+  geom_point(data=temp$nodes,aes(x=lay,y=num),color="black",size=5)+
+  geom_point(data=temp$nodes,aes(x=lay,y=num),color="white",size=4)+
+  geom_text(data=temp$nodes %>% filter(layer=="input"),aes(x=lay,y=num,label=name),size=4,hjust=1,nudge_x=-0.1)+
+  geom_text(data=temp$nodes %>% filter(layer=="output"),aes(x=lay,y=num,label=name),size=4,hjust=-1,nudge_x=0.01)+
+  theme(axis.title = element_blank()
+        ,axis.text=element_blank()
+        ,panel.grid=element_blank()
+        ,panel.background = element_rect(fill="white")
+        ,axis.ticks=element_blank()
+        ,legend.position = "none"
+        )+
+  scale_x_discrete(expand = expansion(add = c(1.5,1))) +
+  annotate("text",x="h",y=2,label="Strong Negative Association",color="#E05C4C",hjust=0)+
+  annotate("text",x="h",y=1.5,label="Weak Association",color="#cecece",hjust=0)+
+  annotate("text",x="h",y=1,label="Strong Positive Association",color="#25C728",hjust=0)+
+  scale_size(range=c(0.1,2))
+
+rm(temp)
+model_structure
+```
+
+
+## export model object
+```{r}
+list(model =final_model, gini_tab=gini_tab, cal=cal
+     ,model_structure=model_structure
+     )%>%
+saveRDS(paste0("models/fnn_",input_date,".rds"))
+```
+
+

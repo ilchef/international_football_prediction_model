@@ -51,6 +51,6 @@ pit_features <- create_pit_features(matches_ts,rankings_features,n=c(9,3))
 
 save data
 ```{r}
-save_rds_and_csv(pit_features,paste0("data/current_pit/input_cleaned_pit_predictions_",format(data_date,"%b%Y")))
+save_rds_and_csv(pit_features,paste0("data/current_pit/fnn_input_cleaned_pit_predictions_",format(data_date,"%b%Y")))
 ```
 

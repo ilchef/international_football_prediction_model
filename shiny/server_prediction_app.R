@@ -16,10 +16,10 @@ server_prediction_app <- function(input,output){
   
   #Make Prediction
   prediction_normal <- reactive({
-        data.frame(as.list(predict(mod_obj$model,type="probs",newdata=temp())))
+        data.frame(predict(mod_obj$model,type="raw",newdata=temp()))
   })
   prediction_inverse <- reactive({
-        data.frame(as.list(predict(mod_obj$model,type="probs",newdata=temp_inverse())))
+        data.frame(predict(mod_obj$model,type="raw",newdata=temp_inverse()))
   })
   
   prediction_final <- reactive({
@@ -36,7 +36,7 @@ server_prediction_app <- function(input,output){
       setDT()%>%
       copy()%>%
       .[,fmp:=1/value]%>%
-      .[,variable:=case_when(variable=="home.win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
+      .[,variable:=case_when(variable=="homewin"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
       .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))] %>%
       .[,metric:= case_when(input$output_metric=="Show Market Price"~fmp,TRUE~value)]
   })
@@ -209,9 +209,10 @@ server_prediction_app <- function(input,output){
     rankings_graph()
   })
   
-  output$feat_plot <- renderPlot({mod_obj$feat_plot})
   
   output$roc_plot <- plotly::renderPlotly({roc_plot()})
+  
+  output$model_structure <- renderPlot({mod_obj$model_structure})
   ############################################################################
   
   # Part X: garbage
