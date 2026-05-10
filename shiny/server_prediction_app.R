@@ -36,7 +36,7 @@ server_prediction_app <- function(input,output){
       setDT()%>%
       copy()%>%
       .[,fmp:=1/value]%>%
-      .[,variable:=case_when(variable=="homewin"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
+      .[,variable:=case_when(variable=="home_win"~paste0(input$home_team," win"),variable=="tie"~"tie",TRUE~paste0(input$away_team," win"))]%>%
       .[,variable:=fct_relevel(variable,c(paste0(input$home_team," win"),"tie"))] %>%
       .[,metric:= case_when(input$output_metric=="Show Market Price"~fmp,TRUE~value)]
   })
@@ -132,14 +132,18 @@ server_prediction_app <- function(input,output){
     })
   
   roc_plot<- reactive({
-    ggplotly(
+    #ggplotly(
       monitoring_data() %>%
       .[,AUROC:=sprintf("AUROC: %.1f%%",value*100)]%>%
       .[,variable:=case_when(variable=="home_gini"~"Home Classifier",variable=="away_gini"~"Away Classifier",TRUE~"Tie Classifier")]%>%
       ggplot(aes(x=year,y=value,color=variable,group=variable,text=AUROC))+
-      geom_line()+
+      geom_line(size=1.1)+
+      #geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.45, ymax = 0.55), fill = "red", alpha = 0.2) +  # Adds a red rectangle
+      annotate("rect",xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = 0.5, fill = "red", alpha = 0.1,color="red",linetype=2)+
       theme(
           panel.background = element_blank()
+          ,axis.text = element_text(size = 12)
+          ,legend.text = element_text(size = 12)
           ,panel.grid.major = element_blank()
           ,panel.grid.minor = element_blank()
           ,panel.border = element_rect(colour="black",fill=NA)
@@ -147,13 +151,15 @@ server_prediction_app <- function(input,output){
           ,axis.line = element_line(color="black")
           ,axis.ticks = element_line(color="black")
           ,legend.title=element_blank()
+          ,legend.position="top"
+          ,plot.title = element_text(hjust = 0.5, size = 16, face = "bold")  # Center-align and increase title siz
       )+
       ggtitle("Discrimination by Sub-model")+
       ylab("Area under ROC")+
       scale_color_manual(values=c("#551fbd","#a2eacb","#cecece"))+
       scale_y_continuous(labels = scales::percent,limits=c(0,1))
-      ,tooltip = c("year","text")
-    )
+    #   ,tooltip = c("year","text")
+    # )
   })
   
   # calibration
@@ -168,7 +174,34 @@ server_prediction_app <- function(input,output){
   })
   
   calibration_plot <- reactive({
-    calibration_data()
+    calibration_data()%>%
+      .[,.(away_predicted,away_actual,home_predicted,home_actual,tie_predicted,tie_actual)] %>%
+      melt() %>%
+      .[,is_pred:=case_when(str_detect(variable,"predicted")~"Predicted",TRUE~"Actual")] %>%
+      .[,model:=case_when(str_detect(variable,"away")~"Away Classifier"
+                          ,str_detect(variable,"home")~"Home Classifier"
+                          ,TRUE~"Tie Classifier")] %>%
+      ggplot()+
+      geom_bar(aes(y=model,x=value,alpha=is_pred,group=is_pred,fill=model),stat="identity",position="dodge")+
+      geom_text(aes(y=model,x=value+0.015,group=is_pred,label=sprintf("%.0f%%",value*100)),position=position_dodge(width=.9))+
+      scale_fill_manual(values=c("#551fbd","#a2eacb","#cecece"))+
+      scale_alpha_manual(values=c(1,.6))+
+      theme(
+        panel.background = element_blank()
+        ,axis.text = element_text(size = 12)
+        ,legend.text = element_text(size = 12)
+        ,panel.grid.major = element_blank()
+        ,panel.grid.minor = element_blank()
+        ,axis.line.y=element_line(color="black")
+        ,axis.title=element_blank()
+        ,axis.ticks.x = element_blank()
+        ,axis.text.x = element_blank()
+        ,legend.title=element_blank()
+        ,legend.position="top"
+        ,plot.title = element_text(hjust = 0.5, size = 16, face = "bold")  # Center-align and increase title siz
+      )+
+      ggtitle("Calibration by Sub-model")+
+      guides(fill="none")
   })
   
   ############################################################################
@@ -210,7 +243,8 @@ server_prediction_app <- function(input,output){
   })
   
   
-  output$roc_plot <- plotly::renderPlotly({roc_plot()})
+  output$roc_plot <- renderPlot({roc_plot()})
+  output$calibration_plot <- renderPlot({calibration_plot()})
   
   output$model_structure <- renderPlot({mod_obj$model_structure})
   ############################################################################

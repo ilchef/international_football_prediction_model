@@ -24,7 +24,7 @@ source("functions/r/get_nnet_structure.R")
 
 read in data
 ```{r}
-input_date <- "19Nov24"
+input_date <- "31Mar26"
 data <- readRDS(paste0("data/output/final_model_data_multiclass__",input_date,".rds")) 
 
 data <- data [, .SD, .SDcols = patterns("outcome|date|neutral|tournament|last_9_matches|delta_rankings|home_team_|away_team_|fifa")]%>%
@@ -122,8 +122,8 @@ predictions <- predict(final_model,data) %>%
   cbind(outcome=data$outcome) %>%
   cbind(year=year(data$date)) %>%
   .[,`:=`(
-    home_outcome = case_when(outcome=="homewin"~1,TRUE~0)
-    ,away_outcome = case_when(outcome=="awaywin"~1,TRUE~0)
+    home_outcome = case_when(outcome=="home_win"~1,TRUE~0)
+    ,away_outcome = case_when(outcome=="away_win"~1,TRUE~0)
     ,tie_outcome = case_when(outcome=="tie"~1,TRUE~0)
   )] %>%
   .[trainIndex,train_data:=1] %>%
@@ -132,22 +132,22 @@ predictions <- predict(final_model,data) %>%
 
 
 gini_tab <- rbind(
-predictions[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="all"]
-,predictions[train_data==1]%>%.[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="train"]
-,predictions[train_data==0]%>%.[,.(away_gini=auc(away_outcome,awaywin),home_gini=auc(home_outcome,homewin),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="test"]
+predictions[,.(away_gini=auc(away_outcome,away_win),home_gini=auc(home_outcome,home_win),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="all"]
+,predictions[train_data==1]%>%.[,.(away_gini=auc(away_outcome,away_win),home_gini=auc(home_outcome,home_win),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="train"]
+,predictions[train_data==0]%>%.[,.(away_gini=auc(away_outcome,away_win),home_gini=auc(home_outcome,home_win),tie_gini=auc(tie_outcome,tie)),year] %>% .[,cat:="test"]
 )
 
 cal <- rbind(
-  predictions[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
-                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+  predictions[,.(away_predicted=mean(away_win),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(home_win),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
                       ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
                       )]%>% .[,cat:="all"]
-  ,predictions[train_data==1]%>%.[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
-                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+  ,predictions[train_data==1]%>%.[,.(away_predicted=mean(away_win),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(home_win),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
                       ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
                       )]%>% .[,cat:="train"]
-  ,predictions[train_data==0]%>%.[,.(away_predicted=mean(awaywin),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
-                      ,home_predicted=mean(homewin),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
+  ,predictions[train_data==0]%>%.[,.(away_predicted=mean(away_win),away_actual=sum(away_outcome)/.N,away_vol=sum(away_outcome)
+                      ,home_predicted=mean(home_win),home_actual=sum(home_outcome)/.N,home_vol=sum(home_outcome)
                       ,tie_predicted=mean(tie),tie_actual=sum(tie_outcome)/.N,tie_vol=sum(tie_outcome)
                       )]%>% .[,cat:="test"]
 )

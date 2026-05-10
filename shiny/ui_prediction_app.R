@@ -77,7 +77,8 @@ ui <- navbarPage(
               )
               ,mainPanel(width=7
                 ,fluidRow(width=12
-                  ,plotlyOutput("roc_plot")
+                  ,plotOutput("roc_plot")
+                  ,plotOutput("calibration_plot")
                 )
               )
            )
