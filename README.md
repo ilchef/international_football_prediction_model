@@ -1,6 +1,6 @@
 # International Football Prediction Model
 
-The deployed model can be viewed in a web application here (UNDER CONSTRUCTION).
+The deployed model can be viewed in a web application [here](https://tilchef.shinyapps.io/international_football_prediction_model/).
 
 ## Repository Contents:
 
